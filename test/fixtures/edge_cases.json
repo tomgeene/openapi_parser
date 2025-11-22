@@ -1,0 +1,430 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Edge Cases and Boundary Values",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/empty-responses": {
+      "get": {
+        "summary": "Test empty response bodies",
+        "responses": {
+          "204": {
+            "description": "No content"
+          },
+          "304": {
+            "description": "Not modified"
+          }
+        }
+      }
+    },
+    "/all-methods": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "GET"
+          }
+        }
+      },
+      "post": {
+        "responses": {
+          "200": {
+            "description": "POST"
+          }
+        }
+      },
+      "put": {
+        "responses": {
+          "200": {
+            "description": "PUT"
+          }
+        }
+      },
+      "patch": {
+        "responses": {
+          "200": {
+            "description": "PATCH"
+          }
+        }
+      },
+      "delete": {
+        "responses": {
+          "200": {
+            "description": "DELETE"
+          }
+        }
+      },
+      "head": {
+        "responses": {
+          "200": {
+            "description": "HEAD"
+          }
+        }
+      },
+      "options": {
+        "responses": {
+          "200": {
+            "description": "OPTIONS"
+          }
+        }
+      },
+      "trace": {
+        "responses": {
+          "200": {
+            "description": "TRACE"
+          }
+        }
+      }
+    },
+    "/status-codes": {
+      "get": {
+        "summary": "All possible status codes",
+        "responses": {
+          "100": {
+            "description": "Continue"
+          },
+          "200": {
+            "description": "OK"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "301": {
+            "description": "Moved Permanently"
+          },
+          "304": {
+            "description": "Not Modified"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          },
+          "502": {
+            "description": "Bad Gateway"
+          },
+          "503": {
+            "description": "Service Unavailable"
+          },
+          "1XX": {
+            "description": "Informational responses"
+          },
+          "2XX": {
+            "description": "Success"
+          },
+          "3XX": {
+            "description": "Redirection"
+          },
+          "4XX": {
+            "description": "Client errors"
+          },
+          "5XX": {
+            "description": "Server errors"
+          },
+          "default": {
+            "description": "Default response"
+          }
+        }
+      }
+    },
+    "/boundary-values": {
+      "post": {
+        "summary": "Test boundary values",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "minInt": {
+                    "type": "integer",
+                    "minimum": -2147483648
+                  },
+                  "maxInt": {
+                    "type": "integer",
+                    "maximum": 2147483647
+                  },
+                  "minNumber": {
+                    "type": "number",
+                    "minimum": -1.7976931348623157e308
+                  },
+                  "maxNumber": {
+                    "type": "number",
+                    "maximum": 1.7976931348623157e308
+                  },
+                  "emptyString": {
+                    "type": "string",
+                    "minLength": 0
+                  },
+                  "veryLongString": {
+                    "type": "string",
+                    "maxLength": 1000000
+                  },
+                  "emptyArray": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 0
+                  },
+                  "largeArray": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    },
+                    "maxItems": 10000
+                  },
+                  "deeplyNested": {
+                    "type": "object",
+                    "properties": {
+                      "level1": {
+                        "type": "object",
+                        "properties": {
+                          "level2": {
+                            "type": "object",
+                            "properties": {
+                              "level3": {
+                                "type": "object",
+                                "properties": {
+                                  "level4": {
+                                    "type": "object",
+                                    "properties": {
+                                      "value": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/all-parameter-locations": {
+      "get": {
+        "summary": "Test all parameter locations",
+        "parameters": [
+          {
+            "name": "queryParam",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Header-Param",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cookieParam",
+            "in": "cookie",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/path-with-special-chars/{id}/{name*}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "name*",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "EmptyObject": {
+        "type": "object"
+      },
+      "ObjectWithNoProperties": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "ObjectWithAnyProperties": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "NullableFields": {
+        "type": "object",
+        "properties": {
+          "nullableString": {
+            "type": ["string", "null"]
+          },
+          "nullableNumber": {
+            "type": ["number", "null"]
+          },
+          "nullableObject": {
+            "type": ["object", "null"]
+          }
+        }
+      },
+      "AllFormats": {
+        "type": "object",
+        "properties": {
+          "int32": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "int64": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "float": {
+            "type": "number",
+            "format": "float"
+          },
+          "double": {
+            "type": "number",
+            "format": "double"
+          },
+          "byte": {
+            "type": "string",
+            "format": "byte"
+          },
+          "binary": {
+            "type": "string",
+            "format": "binary"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "dateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "password": {
+            "type": "string",
+            "format": "password"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "uuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "uri": {
+            "type": "string",
+            "format": "uri"
+          },
+          "hostname": {
+            "type": "string",
+            "format": "hostname"
+          },
+          "ipv4": {
+            "type": "string",
+            "format": "ipv4"
+          },
+          "ipv6": {
+            "type": "string",
+            "format": "ipv6"
+          }
+        }
+      },
+      "ComplexComposition": {
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              }
+            }
+          },
+          {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "not": {
+              "type": "object",
+              "properties": {
+                "forbidden": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

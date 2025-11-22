@@ -1,0 +1,502 @@
+openapi: 3.1.0
+info:
+  title: Comprehensive API Test
+  version: 2.1.0
+  summary: A comprehensive test covering all OpenAPI 3.1 features
+  description: |
+    This API specification tests all possible features and boundary values
+    of the OpenAPI 3.1 specification.
+  termsOfService: https://example.com/terms
+  contact:
+    name: API Team
+    url: https://example.com/contact
+    email: api@example.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+    identifier: Apache-2.0
+
+servers:
+  - url: https://{environment}.example.com:{port}/v{version}
+    description: Multi-environment server
+    variables:
+      environment:
+        default: api
+        enum:
+          - api
+          - staging
+          - dev
+        description: Server environment
+      port:
+        default: "443"
+        description: Server port
+      version:
+        default: "1"
+        enum: ["1", "2"]
+  - url: https://backup.example.com
+    description: Backup server
+
+tags:
+  - name: users
+    description: User operations
+    externalDocs:
+      description: User documentation
+      url: https://docs.example.com/users
+  - name: products
+    description: Product operations
+
+paths:
+  /users:
+    summary: User collection
+    description: Operations on the user collection
+    get:
+      summary: List all users
+      operationId: listUsers
+      tags:
+        - users
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum items to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: filter
+          in: query
+          description: Filter by status
+          schema:
+            type: string
+            enum: [active, inactive, pending]
+      responses:
+        "200":
+          description: Successful response
+          headers:
+            X-Rate-Limit:
+              description: API rate limit
+              schema:
+                type: integer
+            X-Rate-Remaining:
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/User"
+                  pagination:
+                    $ref: "#/components/schemas/Pagination"
+              examples:
+                withUsers:
+                  summary: Response with users
+                  value:
+                    data:
+                      - id: "1"
+                        name: John Doe
+                        email: john@example.com
+                        role: admin
+                    pagination:
+                      total: 1
+                      limit: 10
+                      offset: 0
+        "400":
+          $ref: "#/components/responses/BadRequest"
+    post:
+      summary: Create a user
+      operationId: createUser
+      tags:
+        - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserInput"
+          application/xml:
+            schema:
+              $ref: "#/components/schemas/UserInput"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          description: User already exists
+
+  /users/{userId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        description: User identifier
+        schema:
+          type: string
+          pattern: ^[a-zA-Z0-9-]+$
+    get:
+      summary: Get user by ID
+      operationId: getUserById
+      tags:
+        - users
+      responses:
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+          links:
+            getUserOrders:
+              operationId: listOrders
+              parameters:
+                userId: $response.body#/id
+              description: Get orders for this user
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      summary: Update user
+      operationId: updateUser
+      tags:
+        - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      summary: Delete user
+      operationId: deleteUser
+      tags:
+        - users
+      responses:
+        "204":
+          description: User deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /products:
+    post:
+      summary: Create a product
+      operationId: createProduct
+      tags:
+        - products
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - name
+                - price
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                price:
+                  type: number
+                  minimum: 0
+                  exclusiveMinimum: true
+                image:
+                  type: string
+                  format: binary
+                  description: Product image
+            encoding:
+              image:
+                contentType: image/png, image/jpeg
+      responses:
+        "201":
+          description: Product created
+
+  /webhooks:
+    post:
+      summary: Register a webhook
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+                events:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        "201":
+          description: Webhook registered
+      callbacks:
+        onUserCreated:
+          "{$request.body#/url}":
+            post:
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      type: object
+                      properties:
+                        event:
+                          type: string
+                        data:
+                          $ref: "#/components/schemas/User"
+              responses:
+                "200":
+                  description: Webhook received
+
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - id
+        - name
+        - email
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [admin, user, guest]
+          default: user
+        age:
+          type: integer
+          minimum: 0
+          maximum: 150
+        balance:
+          type: number
+          multipleOf: 0.01
+        active:
+          type: boolean
+          default: true
+        tags:
+          type: array
+          items:
+            type: string
+          uniqueItems: true
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+      example:
+        id: "123"
+        name: John Doe
+        email: john@example.com
+        role: admin
+
+    UserInput:
+      type: object
+      required:
+        - name
+        - email
+      properties:
+        name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [admin, user, guest]
+      xml:
+        name: UserInput
+
+    UserUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+      minProperties: 1
+
+    Pagination:
+      type: object
+      required:
+        - total
+        - limit
+        - offset
+      properties:
+        total:
+          type: integer
+          minimum: 0
+        limit:
+          type: integer
+          minimum: 1
+        offset:
+          type: integer
+          minimum: 0
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: string
+
+    Pet:
+      oneOf:
+        - $ref: "#/components/schemas/Cat"
+        - $ref: "#/components/schemas/Dog"
+      discriminator:
+        propertyName: petType
+        mapping:
+          cat: "#/components/schemas/Cat"
+          dog: "#/components/schemas/Dog"
+
+    Cat:
+      type: object
+      required:
+        - petType
+        - name
+      properties:
+        petType:
+          type: string
+          const: cat
+        name:
+          type: string
+        meow:
+          type: boolean
+
+    Dog:
+      type: object
+      required:
+        - petType
+        - name
+      properties:
+        petType:
+          type: string
+          const: dog
+        name:
+          type: string
+        bark:
+          type: boolean
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  parameters:
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 10
+
+  examples:
+    UserExample:
+      summary: Example user
+      value:
+        id: "1"
+        name: Jane Doe
+        email: jane@example.com
+
+  requestBodies:
+    UserBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/UserInput"
+
+  headers:
+    X-Rate-Limit:
+      description: Rate limit
+      schema:
+        type: integer
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://example.com/oauth/authorize
+          tokenUrl: https://example.com/oauth/token
+          refreshUrl: https://example.com/oauth/refresh
+          scopes:
+            read:users: Read user data
+            write:users: Modify user data
+    OpenID:
+      type: openIdConnect
+      openIdConnectUrl: https://example.com/.well-known/openid-configuration
+
+  links:
+    GetUserOrders:
+      operationId: listOrders
+      parameters:
+        userId: $response.body#/id
+
+security:
+  - ApiKeyAuth: []
+  - BearerAuth: []
+
