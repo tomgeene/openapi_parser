@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2025-12-08
+
+### Fixed
+
+- Fixed all Dialyzer warnings by adding fallback clauses to `new/1` functions
+- Added proper error handling for non-map inputs in spec parsers
+
+### Added
+
+- Added `dialyxir` as a dev dependency for static analysis
+
 ## [0.1.0] - 2025-11-22
 
 ### Added
@@ -55,4 +66,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Module grouping for easy navigation
 - Real-world usage examples (API clients, documentation generators)
 
+[0.1.1]: https://github.com/tomgeene/openapi_parser/releases/tag/v0.1.1
 [0.1.0]: https://github.com/tomgeene/openapi_parser/releases/tag/v0.1.0
