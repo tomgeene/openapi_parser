@@ -211,6 +211,8 @@ defmodule OpenapiParser.Spec.V3.Operation do
     V3.RequestBody.validate(body, "#{context}.requestBody")
   end
 
+  defp validate_responses(nil, _context), do: :ok
+
   defp validate_responses(responses, context) do
     V3.Responses.validate(responses, "#{context}.responses")
   end
