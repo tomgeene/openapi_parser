@@ -297,11 +297,8 @@ defmodule OpenapiParser.V3OperationTest do
     test "fails validation when responses is nil" do
       op = %Operation{responses: nil}
 
-      # The validate function expects a Responses struct, so it will fail
-      # when trying to call Responses.validate on nil
-      assert_raise FunctionClauseError, fn ->
-        Operation.validate(op)
-      end
+      assert {:error, msg} = Operation.validate(op)
+      assert msg =~ "responses"
     end
   end
 end
