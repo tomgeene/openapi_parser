@@ -24,6 +24,10 @@ defmodule OpenapiParser.Spec.V3.SecurityRequirement do
     {:ok, security}
   end
 
+  def new(_data) do
+    {:error, "security requirement must be a map"}
+  end
+
   @doc """
   Validates a SecurityRequirement struct.
   """

@@ -50,6 +50,10 @@ defmodule OpenapiParser.Spec.V2.SecurityScheme do
     {:ok, scheme}
   end
 
+  def new(_data) do
+    {:error, "security scheme must be a map"}
+  end
+
   defp parse_type("basic"), do: :basic
   defp parse_type("apiKey"), do: :apiKey
   defp parse_type("oauth2"), do: :oauth2

@@ -32,6 +32,10 @@ defmodule OpenapiParser.Spec.Tag do
     end
   end
 
+  def new(_data) do
+    {:error, "tag must be a map"}
+  end
+
   defp parse_external_docs(%{"externalDocs" => docs_data}) when is_map(docs_data) do
     ExternalDocumentation.new(docs_data)
   end

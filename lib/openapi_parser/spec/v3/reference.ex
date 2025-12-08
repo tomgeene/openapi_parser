@@ -29,6 +29,10 @@ defmodule OpenapiParser.Spec.V3.Reference do
     {:ok, reference}
   end
 
+  def new(_data) do
+    {:error, "reference must be a map"}
+  end
+
   @doc """
   Validates a Reference struct.
   """

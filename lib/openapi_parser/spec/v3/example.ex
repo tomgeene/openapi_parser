@@ -29,6 +29,10 @@ defmodule OpenapiParser.Spec.V3.Example do
     {:ok, example}
   end
 
+  def new(_data) do
+    {:error, "example must be a map"}
+  end
+
   @doc """
   Validates an Example struct.
   """

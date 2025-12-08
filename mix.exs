@@ -31,7 +31,8 @@ defmodule OpenapiParser.MixProject do
     [
       {:jason, "~> 1.4"},
       {:yaml_elixir, "~> 2.9"},
-      {:ex_doc, "~> 0.31", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.31", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.4", only: :dev, runtime: false}
     ]
   end
 

@@ -123,6 +123,8 @@ defmodule OpenapiParser.Spec.V2.Items do
     Validation.combine_results(validations)
   end
 
+  def validate(_), do: {:error, "invalid items struct"}
+
   defp validate_nested_items(nil), do: :ok
 
   defp validate_nested_items(nested_items) do

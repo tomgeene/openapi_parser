@@ -29,6 +29,10 @@ defmodule OpenapiParser.Spec.V3.ServerVariable do
     {:ok, variable}
   end
 
+  def new(_data) do
+    {:error, "server variable must be a map"}
+  end
+
   @doc """
   Validates a ServerVariable struct.
   """
