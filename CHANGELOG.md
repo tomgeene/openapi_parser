@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2025-12-08
+
+### Added
+
+- Comprehensive test coverage improvements (85.60% → 90.14%)
+- New test files for improved module coverage:
+  - `security_requirement_test.exs` - V2/V3 SecurityRequirement tests
+  - `v3_link_test.exs` - V3.Link server parsing and validation tests
+  - `v3_operation_test.exs` - V3.Operation callbacks, security, and validation tests
+  - `v3_example_reference_test.exs` - V3.Example and V3.Reference tests
+- Extended tests for V3.Header examples parsing and validation
+- Extended tests for V3.Parameter content and examples branches
+- Extended tests for V3.Encoding header validation
+- Extended tests for Parser.V2/V3 error paths
+
+### Changed
+
+- Test suite expanded from ~320 tests to 417 tests
+
 ## [0.1.1] - 2025-12-08
 
 ### Fixed
@@ -66,5 +85,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Module grouping for easy navigation
 - Real-world usage examples (API clients, documentation generators)
 
+[0.1.2]: https://github.com/tomgeene/openapi_parser/releases/tag/v0.1.2
 [0.1.1]: https://github.com/tomgeene/openapi_parser/releases/tag/v0.1.1
 [0.1.0]: https://github.com/tomgeene/openapi_parser/releases/tag/v0.1.0
