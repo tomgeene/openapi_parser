@@ -12,13 +12,14 @@ defmodule OpenapiParser.Spec.Info do
   @type t :: %__MODULE__{
           title: String.t(),
           version: String.t(),
+          summary: String.t() | nil,
           description: String.t() | nil,
           terms_of_service: String.t() | nil,
           contact: Contact.t() | nil,
           license: any() | nil
         }
 
-  defstruct [:title, :version, :description, :terms_of_service, :contact, :license]
+  defstruct [:title, :version, :summary, :description, :terms_of_service, :contact, :license]
 
   @doc """
   Creates a new Info struct from a map.
@@ -31,6 +32,7 @@ defmodule OpenapiParser.Spec.Info do
       info = %__MODULE__{
         title: Map.get(data, "title"),
         version: Map.get(data, "version"),
+        summary: Map.get(data, "summary"),
         description: Map.get(data, "description"),
         terms_of_service: Map.get(data, "termsOfService"),
         contact: contact,
@@ -56,6 +58,7 @@ defmodule OpenapiParser.Spec.Info do
       Validation.validate_required(info, [:title, :version], context),
       Validation.validate_type(info.title, :string, "#{context}.title"),
       Validation.validate_type(info.version, :string, "#{context}.version"),
+      Validation.validate_type(info.summary, :string, "#{context}.summary"),
       Validation.validate_type(info.description, :string, "#{context}.description"),
       Validation.validate_type(info.terms_of_service, :string, "#{context}.termsOfService"),
       validate_contact(info.contact, "#{context}.contact")

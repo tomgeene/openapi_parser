@@ -5,7 +5,16 @@ defmodule OpenapiParser.Spec.V2.Swagger do
   """
 
   alias OpenapiParser.Spec.{ExternalDocumentation, Info, Tag}
-  alias OpenapiParser.Spec.V2.{PathItem, SecurityRequirement, SecurityScheme, Schema}
+
+  alias OpenapiParser.Spec.V2.{
+    Parameter,
+    PathItem,
+    Response,
+    SecurityRequirement,
+    SecurityScheme,
+    Schema
+  }
+
   alias OpenapiParser.Validation
 
   @type t :: %__MODULE__{
@@ -52,6 +61,8 @@ defmodule OpenapiParser.Spec.V2.Swagger do
     with {:ok, info} <- parse_info(data),
          {:ok, paths} <- parse_paths(data),
          {:ok, definitions} <- parse_definitions(data),
+         {:ok, parameters} <- parse_parameters(data),
+         {:ok, responses} <- parse_responses(data),
          {:ok, security_definitions} <- parse_security_definitions(data),
          {:ok, security} <- parse_security(data),
          {:ok, tags} <- parse_tags(data),
@@ -66,8 +77,8 @@ defmodule OpenapiParser.Spec.V2.Swagger do
         produces: Map.get(data, "produces"),
         paths: paths,
         definitions: definitions,
-        parameters: nil,
-        responses: nil,
+        parameters: parameters,
+        responses: responses,
         security_definitions: security_definitions,
         security: security,
         tags: tags,
@@ -121,6 +132,34 @@ defmodule OpenapiParser.Spec.V2.Swagger do
   end
 
   defp parse_definitions(_), do: {:ok, nil}
+
+  defp parse_parameters(%{"parameters" => parameters}) when is_map(parameters) do
+    result =
+      Enum.reduce_while(parameters, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
+        case Parameter.new(value) do
+          {:ok, param} -> {:cont, {:ok, Map.put(acc, key, param)}}
+          error -> {:halt, error}
+        end
+      end)
+
+    result
+  end
+
+  defp parse_parameters(_), do: {:ok, nil}
+
+  defp parse_responses(%{"responses" => responses}) when is_map(responses) do
+    result =
+      Enum.reduce_while(responses, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
+        case Response.new(value) do
+          {:ok, response} -> {:cont, {:ok, Map.put(acc, key, response)}}
+          error -> {:halt, error}
+        end
+      end)
+
+    result
+  end
+
+  defp parse_responses(_), do: {:ok, nil}
 
   defp parse_security_definitions(%{"securityDefinitions" => sec_defs}) when is_map(sec_defs) do
     result =
@@ -181,6 +220,8 @@ defmodule OpenapiParser.Spec.V2.Swagger do
       validate_info(swagger.info, context),
       validate_paths(swagger.paths, context),
       validate_definitions(swagger.definitions, context),
+      validate_parameters(swagger.parameters, context),
+      validate_responses(swagger.responses, context),
       validate_security_definitions(swagger.security_definitions, context),
       validate_security(swagger.security, context),
       validate_tags(swagger.tags, context),
@@ -219,6 +260,30 @@ defmodule OpenapiParser.Spec.V2.Swagger do
         Schema.validate(schema, path)
       end,
       "#{context}.definitions"
+    )
+  end
+
+  defp validate_parameters(nil, _context), do: :ok
+
+  defp validate_parameters(parameters, context) when is_map(parameters) do
+    Validation.validate_map_values(
+      parameters,
+      fn parameter, path ->
+        Parameter.validate(parameter, path)
+      end,
+      "#{context}.parameters"
+    )
+  end
+
+  defp validate_responses(nil, _context), do: :ok
+
+  defp validate_responses(responses, context) when is_map(responses) do
+    Validation.validate_map_values(
+      responses,
+      fn response, path ->
+        Response.validate(response, path)
+      end,
+      "#{context}.responses"
     )
   end
 

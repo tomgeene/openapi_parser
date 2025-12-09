@@ -12,11 +12,12 @@ defmodule OpenapiParser.Spec.V3.OpenAPI do
           openapi: String.t(),
           info: Info.t(),
           servers: [V3.Server.t()] | nil,
-          paths: %{String.t() => V3.PathItem.t() | V3.Reference.t()},
+          paths: %{String.t() => V3.PathItem.t() | V3.Reference.t()} | nil,
           components: V3.Components.t() | nil,
           security: [V3.SecurityRequirement.t()] | nil,
           tags: [Tag.t()] | nil,
-          external_docs: ExternalDocumentation.t() | nil
+          external_docs: ExternalDocumentation.t() | nil,
+          webhooks: %{String.t() => V3.PathItem.t() | V3.Reference.t()} | nil
         }
 
   defstruct [
@@ -27,7 +28,8 @@ defmodule OpenapiParser.Spec.V3.OpenAPI do
     :components,
     :security,
     :tags,
-    :external_docs
+    :external_docs,
+    :webhooks
   ]
 
   @doc """
@@ -38,6 +40,7 @@ defmodule OpenapiParser.Spec.V3.OpenAPI do
     with {:ok, info} <- parse_info(data),
          {:ok, servers} <- parse_servers(data),
          {:ok, paths} <- parse_paths(data),
+         {:ok, webhooks} <- parse_webhooks(data),
          {:ok, components} <- parse_components(data),
          {:ok, security} <- parse_security(data),
          {:ok, tags} <- parse_tags(data),
@@ -47,6 +50,7 @@ defmodule OpenapiParser.Spec.V3.OpenAPI do
         info: info,
         servers: servers,
         paths: paths,
+        webhooks: webhooks,
         components: components,
         security: security,
         tags: tags,
@@ -105,7 +109,28 @@ defmodule OpenapiParser.Spec.V3.OpenAPI do
     result
   end
 
-  defp parse_paths(_), do: {:error, "paths is required"}
+  defp parse_paths(_), do: {:ok, nil}
+
+  defp parse_webhooks(%{"webhooks" => webhooks}) when is_map(webhooks) do
+    result =
+      Enum.reduce_while(webhooks, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
+        result =
+          if Map.has_key?(value, "$ref") do
+            V3.Reference.new(value)
+          else
+            V3.PathItem.new(value)
+          end
+
+        case result do
+          {:ok, path_item} -> {:cont, {:ok, Map.put(acc, key, path_item)}}
+          error -> {:halt, error}
+        end
+      end)
+
+    result
+  end
+
+  defp parse_webhooks(_), do: {:ok, nil}
 
   defp parse_components(%{"components" => components_data}) when is_map(components_data) do
     V3.Components.new(components_data)
@@ -153,11 +178,13 @@ defmodule OpenapiParser.Spec.V3.OpenAPI do
   @spec validate(t(), String.t()) :: :ok | {:error, String.t()}
   def validate(%__MODULE__{} = openapi, context \\ "openapi") do
     validations = [
-      Validation.validate_required(openapi, [:openapi, :info, :paths], context),
+      Validation.validate_required(openapi, [:openapi, :info], context),
+      validate_at_least_one_path_component_webhook(openapi, context),
       Validation.validate_type(openapi.openapi, :string, "#{context}.openapi"),
       validate_info(openapi.info, context),
       validate_servers(openapi.servers, context),
       validate_paths(openapi.paths, context),
+      validate_webhooks(openapi.webhooks, context),
       validate_components(openapi.components, context),
       validate_security(openapi.security, context),
       validate_tags(openapi.tags, context),
@@ -166,6 +193,40 @@ defmodule OpenapiParser.Spec.V3.OpenAPI do
 
     Validation.combine_results(validations)
   end
+
+  defp validate_at_least_one_path_component_webhook(openapi, context) do
+    version = parse_version(openapi.openapi)
+
+    cond do
+      version == "3.1.0" or (is_binary(version) and String.starts_with?(version, "3.1")) ->
+        # OpenAPI 3.1: at least one of paths, components, or webhooks must be present
+        # Empty maps are considered present
+        has_paths = not is_nil(openapi.paths)
+        has_components = not is_nil(openapi.components)
+        has_webhooks = not is_nil(openapi.webhooks)
+
+        if has_paths or has_components or has_webhooks do
+          :ok
+        else
+          {:error,
+           "#{context}: At least one of paths, components, or webhooks must be present (OpenAPI 3.1)"}
+        end
+
+      true ->
+        # OpenAPI 3.0: paths is required (can be empty map)
+        if is_nil(openapi.paths) do
+          {:error, "#{context}: paths is required"}
+        else
+          :ok
+        end
+    end
+  end
+
+  defp parse_version(version_string) when is_binary(version_string) do
+    version_string
+  end
+
+  defp parse_version(_), do: nil
 
   defp validate_info(info, context) do
     Info.validate(info, "#{context}.info")
@@ -183,6 +244,8 @@ defmodule OpenapiParser.Spec.V3.OpenAPI do
     )
   end
 
+  defp validate_paths(nil, _context), do: :ok
+
   defp validate_paths(paths, context) when is_map(paths) do
     Validation.validate_map_values(
       paths,
@@ -196,6 +259,18 @@ defmodule OpenapiParser.Spec.V3.OpenAPI do
         end
       end,
       "#{context}.paths"
+    )
+  end
+
+  defp validate_webhooks(nil, _context), do: :ok
+
+  defp validate_webhooks(webhooks, context) when is_map(webhooks) do
+    Validation.validate_map_values(
+      webhooks,
+      fn path_item, path ->
+        validate_path_item(path_item, path)
+      end,
+      "#{context}.webhooks"
     )
   end
 

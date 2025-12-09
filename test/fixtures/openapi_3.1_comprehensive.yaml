@@ -420,6 +420,94 @@ components:
         bark:
           type: boolean
 
+    # JSON Schema 2020-12 features
+    PatternPropertiesExample:
+      type: object
+      patternProperties:
+        "^S_":
+          type: string
+        "^I_":
+          type: integer
+        "^B_":
+          type: boolean
+
+    PropertyNamesExample:
+      type: object
+      propertyNames:
+        type: string
+        pattern: "^[A-Z]"
+
+    PrefixItemsExample:
+      type: array
+      prefixItems:
+        - type: string
+        - type: integer
+        - type: boolean
+      items: false
+
+    ContainsExample:
+      type: array
+      contains:
+        type: string
+      minContains: 1
+      maxContains: 5
+
+    UnevaluatedItemsExample:
+      type: array
+      prefixItems:
+        - type: string
+      unevaluatedItems: false
+
+    DependentSchemasExample:
+      type: object
+      properties:
+        credit_card:
+          type: string
+        billing_address:
+          type: string
+      dependentSchemas:
+        credit_card:
+          required:
+            - billing_address
+
+    IfThenElseExample:
+      type: object
+      properties:
+        foo:
+          type: integer
+      if:
+        properties:
+          foo:
+            const: 3
+      then:
+        properties:
+          bar:
+            type: string
+      else:
+        properties:
+          baz:
+            type: number
+
+    DefsExample:
+      type: object
+      $defs:
+        address:
+          type: string
+        name:
+          type: string
+      properties:
+        fullName:
+          $ref: "#/$defs/name"
+        homeAddress:
+          $ref: "#/$defs/address"
+
+    SchemaReferenceExample:
+      $id: "https://example.com/schema"
+      $anchor: "myAnchor"
+      $schema: "https://json-schema.org/draft/2020-12/schema"
+      $comment: "This is a comment"
+      type: object
+
   responses:
     BadRequest:
       description: Bad request
@@ -496,7 +584,20 @@ components:
       parameters:
         userId: $response.body#/id
 
+webhooks:
+  newPet:
+    post:
+      description: A new pet arrived
+      requestBody:
+        description: Information about a new pet
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Pet"
+      responses:
+        "200":
+          description: Webhook received successfully
+
 security:
   - ApiKeyAuth: []
   - BearerAuth: []
-

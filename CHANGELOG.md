@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2025-12-08
+
+### Added
+
+- **JSON Schema 2020-12 Keywords** - Full support for all JSON Schema 2020-12 features:
+  - `patternProperties` - Pattern-based property validation
+  - `propertyNames` - Property name validation
+  - `prefixItems` - Tuple-style array validation
+  - `contains` / `minContains` / `maxContains` - Array containment validation
+  - `unevaluatedItems` - Array item validation
+  - `unevaluatedProperties` - Object property validation (previously missing)
+  - `dependentSchemas` - Conditional schemas based on property presence
+  - `if` / `then` / `else` - Conditional schema validation
+  - `$defs` - Local schema definitions
+  - `$id`, `$anchor`, `$dynamicAnchor`, `$dynamicRef` - Schema references
+  - `$schema` - JSON Schema version declaration
+  - `$comment` - Documentation comments
+- **OpenAPI 3.1 Features**:
+  - `webhooks` - Top-level webhooks object support
+  - `summary` - Info object summary field
+  - Fixed validation to allow specs with only `webhooks` or only `components` (OpenAPI 3.1 requirement)
+- **OpenAPI 3.0 Compatibility**:
+  - `nullable` - Nullable field support for OpenAPI 3.0
+- **Swagger 2.0**:
+  - Global `parameters` - Parsing and validation of root-level parameters
+  - Global `responses` - Parsing and validation of root-level responses
+- Comprehensive test suite with 450+ tests covering all new features
+- Integration tests for all new JSON Schema keywords and OpenAPI features
+
+### Changed
+
+- Updated validation logic to support OpenAPI 3.1 requirements (paths/components/webhooks)
+- Enhanced schema validation to support all JSON Schema 2020-12 keywords
+- Test suite expanded from 417 tests to 451 tests
+
 ## [0.1.2] - 2025-12-08
 
 ### Added
@@ -85,6 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Module grouping for easy navigation
 - Real-world usage examples (API clients, documentation generators)
 
+[0.2.0]: https://github.com/tomgeene/openapi_parser/releases/tag/v0.2.0
 [0.1.2]: https://github.com/tomgeene/openapi_parser/releases/tag/v0.1.2
 [0.1.1]: https://github.com/tomgeene/openapi_parser/releases/tag/v0.1.1
 [0.1.0]: https://github.com/tomgeene/openapi_parser/releases/tag/v0.1.0
