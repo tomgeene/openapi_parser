@@ -3,6 +3,7 @@ defmodule OpenapiParser.Spec.V2.Schema do
   Schema Object for Swagger 2.0 (JSON Schema subset).
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.ExternalDocumentation
   alias OpenapiParser.Spec.V2.Xml
   alias OpenapiParser.Validation
@@ -90,9 +91,10 @@ defmodule OpenapiParser.Spec.V2.Schema do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
     # Handle $ref
-    if Map.has_key?(data, "$ref") do
-      {:ok, %__MODULE__{ref: data["$ref"]}}
+    if Map.has_key?(data, :"$ref") do
+      {:ok, %__MODULE__{ref: data[:"$ref"]}}
     else
       with {:ok, items} <- parse_items(data),
            {:ok, properties} <- parse_properties(data),
@@ -101,35 +103,35 @@ defmodule OpenapiParser.Spec.V2.Schema do
            {:ok, external_docs} <- parse_external_docs(data),
            {:ok, xml} <- parse_xml(data) do
         schema = %__MODULE__{
-          type: parse_type(data["type"]),
-          format: Map.get(data, "format"),
-          max_length: Map.get(data, "maxLength"),
-          min_length: Map.get(data, "minLength"),
-          pattern: Map.get(data, "pattern"),
-          maximum: Map.get(data, "maximum"),
-          exclusive_maximum: Map.get(data, "exclusiveMaximum"),
-          minimum: Map.get(data, "minimum"),
-          exclusive_minimum: Map.get(data, "exclusiveMinimum"),
-          multiple_of: Map.get(data, "multipleOf"),
+          type: parse_type(data[:type]),
+          format: Map.get(data, :format),
+          max_length: Map.get(data, :maxLength),
+          min_length: Map.get(data, :minLength),
+          pattern: Map.get(data, :pattern),
+          maximum: Map.get(data, :maximum),
+          exclusive_maximum: Map.get(data, :exclusiveMaximum),
+          minimum: Map.get(data, :minimum),
+          exclusive_minimum: Map.get(data, :exclusiveMinimum),
+          multiple_of: Map.get(data, :multipleOf),
           items: items,
-          max_items: Map.get(data, "maxItems"),
-          min_items: Map.get(data, "minItems"),
-          unique_items: Map.get(data, "uniqueItems"),
+          max_items: Map.get(data, :maxItems),
+          min_items: Map.get(data, :minItems),
+          unique_items: Map.get(data, :uniqueItems),
           properties: properties,
           additional_properties: additional_properties,
-          required: Map.get(data, "required"),
-          max_properties: Map.get(data, "maxProperties"),
-          min_properties: Map.get(data, "minProperties"),
-          enum: Map.get(data, "enum"),
-          default: Map.get(data, "default"),
+          required: Map.get(data, :required),
+          max_properties: Map.get(data, :maxProperties),
+          min_properties: Map.get(data, :minProperties),
+          enum: Map.get(data, :enum),
+          default: Map.get(data, :default),
           all_of: all_of,
-          title: Map.get(data, "title"),
-          description: Map.get(data, "description"),
-          example: Map.get(data, "example"),
+          title: Map.get(data, :title),
+          description: Map.get(data, :description),
+          example: Map.get(data, :example),
           external_docs: external_docs,
           ref: nil,
-          discriminator: Map.get(data, "discriminator"),
-          read_only: Map.get(data, "readOnly"),
+          discriminator: Map.get(data, :discriminator),
+          read_only: Map.get(data, :readOnly),
           xml: xml
         }
 
@@ -148,13 +150,13 @@ defmodule OpenapiParser.Spec.V2.Schema do
   defp parse_type("file"), do: :file
   defp parse_type(_), do: nil
 
-  defp parse_items(%{"items" => items_data}) when is_map(items_data) do
+  defp parse_items(%{:items => items_data}) when is_map(items_data) do
     new(items_data)
   end
 
   defp parse_items(_), do: {:ok, nil}
 
-  defp parse_properties(%{"properties" => props}) when is_map(props) do
+  defp parse_properties(%{:properties => props}) when is_map(props) do
     result =
       Enum.reduce_while(props, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
         case new(value) do
@@ -168,17 +170,17 @@ defmodule OpenapiParser.Spec.V2.Schema do
 
   defp parse_properties(_), do: {:ok, nil}
 
-  defp parse_additional_properties(%{"additionalProperties" => false}), do: {:ok, false}
-  defp parse_additional_properties(%{"additionalProperties" => true}), do: {:ok, true}
+  defp parse_additional_properties(%{:additionalProperties => false}), do: {:ok, false}
+  defp parse_additional_properties(%{:additionalProperties => true}), do: {:ok, true}
 
-  defp parse_additional_properties(%{"additionalProperties" => schema_data})
+  defp parse_additional_properties(%{:additionalProperties => schema_data})
        when is_map(schema_data) do
     new(schema_data)
   end
 
   defp parse_additional_properties(_), do: {:ok, nil}
 
-  defp parse_all_of(%{"allOf" => all_of}) when is_list(all_of) do
+  defp parse_all_of(%{:allOf => all_of}) when is_list(all_of) do
     result =
       Enum.reduce_while(all_of, {:ok, []}, fn schema_data, {:ok, acc} ->
         case new(schema_data) do
@@ -192,13 +194,13 @@ defmodule OpenapiParser.Spec.V2.Schema do
 
   defp parse_all_of(_), do: {:ok, nil}
 
-  defp parse_external_docs(%{"externalDocs" => docs_data}) when is_map(docs_data) do
+  defp parse_external_docs(%{:externalDocs => docs_data}) when is_map(docs_data) do
     ExternalDocumentation.new(docs_data)
   end
 
   defp parse_external_docs(_), do: {:ok, nil}
 
-  defp parse_xml(%{"xml" => xml_data}) when is_map(xml_data) do
+  defp parse_xml(%{:xml => xml_data}) when is_map(xml_data) do
     Xml.new(xml_data)
   end
 

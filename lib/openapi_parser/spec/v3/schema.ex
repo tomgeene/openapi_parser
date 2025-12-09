@@ -6,6 +6,7 @@ defmodule OpenapiParser.Spec.V3.Schema do
   V3.0 uses JSON Schema Draft 5, V3.1 uses JSON Schema 2020-12.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.{ExternalDocumentation, V3}
   alias OpenapiParser.Validation
 
@@ -154,8 +155,9 @@ defmodule OpenapiParser.Spec.V3.Schema do
   """
   @spec new(map()) :: {:ok, t() | V3.Reference.t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
     # Handle $ref
-    if Map.has_key?(data, "$ref") do
+    if Map.has_key?(data, :"$ref") do
       V3.Reference.new(data)
     else
       with {:ok, items} <- parse_items(data),
@@ -170,45 +172,45 @@ defmodule OpenapiParser.Spec.V3.Schema do
            {:ok, dependent_schemas} <- parse_dependent_schemas(data),
            {:ok, if_then_else} <- parse_if_then_else(data),
            {:ok, defs} <- parse_defs(data),
-           {:ok, all_of} <- parse_composition(data, "allOf"),
-           {:ok, any_of} <- parse_composition(data, "anyOf"),
-           {:ok, one_of} <- parse_composition(data, "oneOf"),
+           {:ok, all_of} <- parse_composition(data, :allOf),
+           {:ok, any_of} <- parse_composition(data, :anyOf),
+           {:ok, one_of} <- parse_composition(data, :oneOf),
            {:ok, not_schema} <- parse_not(data),
            {:ok, external_docs} <- parse_external_docs(data),
            {:ok, discriminator} <- parse_discriminator(data),
            {:ok, xml} <- parse_xml(data) do
         schema = %__MODULE__{
-          type: parse_type(data["type"]),
-          format: Map.get(data, "format"),
-          max_length: Map.get(data, "maxLength"),
-          min_length: Map.get(data, "minLength"),
-          pattern: Map.get(data, "pattern"),
-          maximum: Map.get(data, "maximum"),
-          exclusive_maximum: Map.get(data, "exclusiveMaximum"),
-          minimum: Map.get(data, "minimum"),
-          exclusive_minimum: Map.get(data, "exclusiveMinimum"),
-          multiple_of: Map.get(data, "multipleOf"),
+          type: parse_type(data[:type]),
+          format: Map.get(data, :format),
+          max_length: Map.get(data, :maxLength),
+          min_length: Map.get(data, :minLength),
+          pattern: Map.get(data, :pattern),
+          maximum: Map.get(data, :maximum),
+          exclusive_maximum: Map.get(data, :exclusiveMaximum),
+          minimum: Map.get(data, :minimum),
+          exclusive_minimum: Map.get(data, :exclusiveMinimum),
+          multiple_of: Map.get(data, :multipleOf),
           items: items,
           prefix_items: prefix_items,
           contains: contains,
-          min_contains: Map.get(data, "minContains"),
-          max_contains: Map.get(data, "maxContains"),
+          min_contains: Map.get(data, :minContains),
+          max_contains: Map.get(data, :maxContains),
           unevaluated_items: unevaluated_items,
-          max_items: Map.get(data, "maxItems"),
-          min_items: Map.get(data, "minItems"),
-          unique_items: Map.get(data, "uniqueItems"),
+          max_items: Map.get(data, :maxItems),
+          min_items: Map.get(data, :minItems),
+          unique_items: Map.get(data, :uniqueItems),
           properties: properties,
           pattern_properties: pattern_properties,
           property_names: property_names,
           additional_properties: additional_properties,
           unevaluated_properties: unevaluated_properties,
-          required: Map.get(data, "required"),
-          max_properties: Map.get(data, "maxProperties"),
-          min_properties: Map.get(data, "minProperties"),
+          required: Map.get(data, :required),
+          max_properties: Map.get(data, :maxProperties),
+          min_properties: Map.get(data, :minProperties),
           dependent_schemas: dependent_schemas,
-          enum: Map.get(data, "enum"),
-          const: Map.get(data, "const"),
-          default: Map.get(data, "default"),
+          enum: Map.get(data, :enum),
+          const: Map.get(data, :const),
+          default: Map.get(data, :default),
           all_of: all_of,
           any_of: any_of,
           one_of: one_of,
@@ -216,27 +218,27 @@ defmodule OpenapiParser.Spec.V3.Schema do
           if_schema: if_then_else.if_schema,
           then_schema: if_then_else.then_schema,
           else_schema: if_then_else.else_schema,
-          title: Map.get(data, "title"),
-          description: Map.get(data, "description"),
-          example: Map.get(data, "example"),
-          examples: Map.get(data, "examples"),
+          title: Map.get(data, :title),
+          description: Map.get(data, :description),
+          example: Map.get(data, :example),
+          examples: Map.get(data, :examples),
           external_docs: external_docs,
-          deprecated: Map.get(data, "deprecated"),
+          deprecated: Map.get(data, :deprecated),
           discriminator: discriminator,
-          read_only: Map.get(data, "readOnly"),
-          write_only: Map.get(data, "writeOnly"),
+          read_only: Map.get(data, :readOnly),
+          write_only: Map.get(data, :writeOnly),
           xml: xml,
-          content_encoding: Map.get(data, "contentEncoding"),
-          content_media_type: Map.get(data, "contentMediaType"),
-          content_schema: Map.get(data, "contentSchema"),
+          content_encoding: Map.get(data, :contentEncoding),
+          content_media_type: Map.get(data, :contentMediaType),
+          content_schema: Map.get(data, :contentSchema),
           defs: defs,
-          id: Map.get(data, "$id"),
-          anchor: Map.get(data, "$anchor"),
-          dynamic_anchor: Map.get(data, "$dynamicAnchor"),
-          dynamic_ref: Map.get(data, "$dynamicRef"),
-          schema_uri: Map.get(data, "$schema"),
-          comment: Map.get(data, "$comment"),
-          nullable: Map.get(data, "nullable")
+          id: Map.get(data, :"$id"),
+          anchor: Map.get(data, :"$anchor"),
+          dynamic_anchor: Map.get(data, :"$dynamicAnchor"),
+          dynamic_ref: Map.get(data, :"$dynamicRef"),
+          schema_uri: Map.get(data, :"$schema"),
+          comment: Map.get(data, :"$comment"),
+          nullable: Map.get(data, :nullable)
         }
 
         {:ok, schema}
@@ -261,13 +263,13 @@ defmodule OpenapiParser.Spec.V3.Schema do
   defp parse_single_type("null"), do: :null
   defp parse_single_type(_), do: nil
 
-  defp parse_items(%{"items" => items_data}) when is_map(items_data) do
+  defp parse_items(%{:items => items_data}) when is_map(items_data) do
     new(items_data)
   end
 
   defp parse_items(_), do: {:ok, nil}
 
-  defp parse_properties(%{"properties" => props}) when is_map(props) do
+  defp parse_properties(%{:properties => props}) when is_map(props) do
     result =
       Enum.reduce_while(props, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
         case new(value) do
@@ -281,27 +283,27 @@ defmodule OpenapiParser.Spec.V3.Schema do
 
   defp parse_properties(_), do: {:ok, nil}
 
-  defp parse_additional_properties(%{"additionalProperties" => false}), do: {:ok, false}
-  defp parse_additional_properties(%{"additionalProperties" => true}), do: {:ok, true}
+  defp parse_additional_properties(%{:additionalProperties => false}), do: {:ok, false}
+  defp parse_additional_properties(%{:additionalProperties => true}), do: {:ok, true}
 
-  defp parse_additional_properties(%{"additionalProperties" => schema_data})
+  defp parse_additional_properties(%{:additionalProperties => schema_data})
        when is_map(schema_data) do
     new(schema_data)
   end
 
   defp parse_additional_properties(_), do: {:ok, nil}
 
-  defp parse_unevaluated_properties(%{"unevaluatedProperties" => false}), do: {:ok, false}
-  defp parse_unevaluated_properties(%{"unevaluatedProperties" => true}), do: {:ok, true}
+  defp parse_unevaluated_properties(%{:unevaluatedProperties => false}), do: {:ok, false}
+  defp parse_unevaluated_properties(%{:unevaluatedProperties => true}), do: {:ok, true}
 
-  defp parse_unevaluated_properties(%{"unevaluatedProperties" => schema_data})
+  defp parse_unevaluated_properties(%{:unevaluatedProperties => schema_data})
        when is_map(schema_data) do
     new(schema_data)
   end
 
   defp parse_unevaluated_properties(_), do: {:ok, nil}
 
-  defp parse_prefix_items(%{"prefixItems" => prefix_items}) when is_list(prefix_items) do
+  defp parse_prefix_items(%{:prefixItems => prefix_items}) when is_list(prefix_items) do
     result =
       Enum.reduce_while(prefix_items, {:ok, []}, fn schema_data, {:ok, acc} ->
         case new(schema_data) do
@@ -315,23 +317,23 @@ defmodule OpenapiParser.Spec.V3.Schema do
 
   defp parse_prefix_items(_), do: {:ok, nil}
 
-  defp parse_contains(%{"contains" => contains_data}) when is_map(contains_data) do
+  defp parse_contains(%{:contains => contains_data}) when is_map(contains_data) do
     new(contains_data)
   end
 
   defp parse_contains(_), do: {:ok, nil}
 
-  defp parse_unevaluated_items(%{"unevaluatedItems" => false}), do: {:ok, false}
-  defp parse_unevaluated_items(%{"unevaluatedItems" => true}), do: {:ok, true}
+  defp parse_unevaluated_items(%{:unevaluatedItems => false}), do: {:ok, false}
+  defp parse_unevaluated_items(%{:unevaluatedItems => true}), do: {:ok, true}
 
-  defp parse_unevaluated_items(%{"unevaluatedItems" => schema_data})
+  defp parse_unevaluated_items(%{:unevaluatedItems => schema_data})
        when is_map(schema_data) do
     new(schema_data)
   end
 
   defp parse_unevaluated_items(_), do: {:ok, nil}
 
-  defp parse_pattern_properties(%{"patternProperties" => pattern_props})
+  defp parse_pattern_properties(%{:patternProperties => pattern_props})
        when is_map(pattern_props) do
     result =
       Enum.reduce_while(pattern_props, {:ok, %{}}, fn {pattern, value}, {:ok, acc} ->
@@ -346,13 +348,13 @@ defmodule OpenapiParser.Spec.V3.Schema do
 
   defp parse_pattern_properties(_), do: {:ok, nil}
 
-  defp parse_property_names(%{"propertyNames" => prop_names_data}) when is_map(prop_names_data) do
+  defp parse_property_names(%{:propertyNames => prop_names_data}) when is_map(prop_names_data) do
     new(prop_names_data)
   end
 
   defp parse_property_names(_), do: {:ok, nil}
 
-  defp parse_dependent_schemas(%{"dependentSchemas" => dep_schemas}) when is_map(dep_schemas) do
+  defp parse_dependent_schemas(%{:dependentSchemas => dep_schemas}) when is_map(dep_schemas) do
     result =
       Enum.reduce_while(dep_schemas, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
         case new(value) do
@@ -368,13 +370,13 @@ defmodule OpenapiParser.Spec.V3.Schema do
 
   defp parse_if_then_else(data) do
     if_schema =
-      if Map.has_key?(data, "if"), do: parse_if_then_else_schema(data["if"]), else: {:ok, nil}
+      if Map.has_key?(data, :if), do: parse_if_then_else_schema(data[:if]), else: {:ok, nil}
 
     then_schema =
-      if Map.has_key?(data, "then"), do: parse_if_then_else_schema(data["then"]), else: {:ok, nil}
+      if Map.has_key?(data, :then), do: parse_if_then_else_schema(data[:then]), else: {:ok, nil}
 
     else_schema =
-      if Map.has_key?(data, "else"), do: parse_if_then_else_schema(data["else"]), else: {:ok, nil}
+      if Map.has_key?(data, :else), do: parse_if_then_else_schema(data[:else]), else: {:ok, nil}
 
     with {:ok, if_val} <- if_schema,
          {:ok, then_val} <- then_schema,
@@ -387,7 +389,7 @@ defmodule OpenapiParser.Spec.V3.Schema do
   defp parse_if_then_else_schema(schema_data) when is_map(schema_data), do: new(schema_data)
   defp parse_if_then_else_schema(_), do: {:ok, nil}
 
-  defp parse_defs(%{"$defs" => defs_data}) when is_map(defs_data) do
+  defp parse_defs(%{:"$defs" => defs_data}) when is_map(defs_data) do
     result =
       Enum.reduce_while(defs_data, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
         case new(value) do
@@ -419,25 +421,25 @@ defmodule OpenapiParser.Spec.V3.Schema do
     end
   end
 
-  defp parse_not(%{"not" => not_data}) when is_map(not_data) do
+  defp parse_not(%{:not => not_data}) when is_map(not_data) do
     new(not_data)
   end
 
   defp parse_not(_), do: {:ok, nil}
 
-  defp parse_external_docs(%{"externalDocs" => docs_data}) when is_map(docs_data) do
+  defp parse_external_docs(%{:externalDocs => docs_data}) when is_map(docs_data) do
     ExternalDocumentation.new(docs_data)
   end
 
   defp parse_external_docs(_), do: {:ok, nil}
 
-  defp parse_discriminator(%{"discriminator" => disc_data}) when is_map(disc_data) do
+  defp parse_discriminator(%{:discriminator => disc_data}) when is_map(disc_data) do
     V3.Discriminator.new(disc_data)
   end
 
   defp parse_discriminator(_), do: {:ok, nil}
 
-  defp parse_xml(%{"xml" => xml_data}) when is_map(xml_data) do
+  defp parse_xml(%{:xml => xml_data}) when is_map(xml_data) do
     V3.Xml.new(xml_data)
   end
 

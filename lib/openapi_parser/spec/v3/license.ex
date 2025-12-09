@@ -5,6 +5,7 @@ defmodule OpenapiParser.Spec.V3.License do
   V3.1 adds the optional `identifier` field for SPDX license identifiers.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Validation
 
   @type t :: %__MODULE__{
@@ -20,10 +21,11 @@ defmodule OpenapiParser.Spec.V3.License do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
     license = %__MODULE__{
-      name: Map.get(data, "name"),
-      url: Map.get(data, "url"),
-      identifier: Map.get(data, "identifier")
+      name: Map.get(data, :name),
+      url: Map.get(data, :url),
+      identifier: Map.get(data, :identifier)
     }
 
     {:ok, license}

@@ -8,6 +8,7 @@ defmodule OpenapiParser.Parser do
 
   alias OpenapiParser.Parser.{V2, V3}
   alias OpenapiParser.Spec
+  alias OpenapiParser.KeyNormalizer
 
   @doc """
   Parses an OpenAPI specification from a string.
@@ -59,14 +60,14 @@ defmodule OpenapiParser.Parser do
   defp decode_content(content, :auto) do
     # Try JSON first, then YAML
     case Jason.decode(content) do
-      {:ok, data} -> {:ok, data}
+      {:ok, data} -> {:ok, KeyNormalizer.normalize(data)}
       {:error, _} -> decode_yaml(content)
     end
   end
 
   defp decode_content(content, :json) do
     case Jason.decode(content) do
-      {:ok, data} -> {:ok, data}
+      {:ok, data} -> {:ok, KeyNormalizer.normalize(data)}
       {:error, error} -> {:error, "JSON decode error: #{inspect(error)}"}
     end
   end
@@ -77,7 +78,7 @@ defmodule OpenapiParser.Parser do
 
   defp decode_yaml(content) do
     case YamlElixir.read_from_string(content) do
-      {:ok, data} -> {:ok, data}
+      {:ok, data} -> {:ok, KeyNormalizer.normalize(data)}
       {:error, error} -> {:error, "YAML decode error: #{inspect(error)}"}
     end
   end
@@ -92,12 +93,12 @@ defmodule OpenapiParser.Parser do
 
   defp detect_format_from_path(_path, format), do: format
 
-  defp detect_version(%{"swagger" => "2.0"}), do: {:ok, :v2}
+  defp detect_version(%{swagger: "2.0"}), do: {:ok, :v2}
 
-  defp detect_version(%{"swagger" => version}),
+  defp detect_version(%{swagger: version}),
     do: {:error, "Unsupported Swagger version: #{version}"}
 
-  defp detect_version(%{"openapi" => version}) when is_binary(version) do
+  defp detect_version(%{openapi: version}) when is_binary(version) do
     case String.split(version, ".") do
       ["3", "0" | _] -> {:ok, :v3_0}
       ["3", "1" | _] -> {:ok, :v3_1}

@@ -5,6 +5,7 @@ defmodule OpenapiParser.Spec.V3.Components do
   Holds a set of reusable objects for different aspects of the OAS.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.V3
   alias OpenapiParser.Validation
 
@@ -37,16 +38,17 @@ defmodule OpenapiParser.Spec.V3.Components do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
-    with {:ok, schemas} <- parse_component(data, "schemas", &V3.Schema.new/1),
-         {:ok, responses} <- parse_component(data, "responses", &V3.Response.new/1),
-         {:ok, parameters} <- parse_component(data, "parameters", &V3.Parameter.new/1),
-         {:ok, examples} <- parse_component(data, "examples", &V3.Example.new/1),
-         {:ok, request_bodies} <- parse_component(data, "requestBodies", &V3.RequestBody.new/1),
-         {:ok, headers} <- parse_component(data, "headers", &V3.Header.new/1),
+    data = KeyNormalizer.normalize_shallow(data)
+    with {:ok, schemas} <- parse_component(data, :schemas, &V3.Schema.new/1),
+         {:ok, responses} <- parse_component(data, :responses, &V3.Response.new/1),
+         {:ok, parameters} <- parse_component(data, :parameters, &V3.Parameter.new/1),
+         {:ok, examples} <- parse_component(data, :examples, &V3.Example.new/1),
+         {:ok, request_bodies} <- parse_component(data, :requestBodies, &V3.RequestBody.new/1),
+         {:ok, headers} <- parse_component(data, :headers, &V3.Header.new/1),
          {:ok, security_schemes} <-
-           parse_component(data, "securitySchemes", &V3.SecurityScheme.new/1),
-         {:ok, links} <- parse_component(data, "links", &V3.Link.new/1),
-         {:ok, callbacks} <- parse_component(data, "callbacks", &V3.Callback.new/1) do
+           parse_component(data, :securitySchemes, &V3.SecurityScheme.new/1),
+         {:ok, links} <- parse_component(data, :links, &V3.Link.new/1),
+         {:ok, callbacks} <- parse_component(data, :callbacks, &V3.Callback.new/1) do
       components = %__MODULE__{
         schemas: schemas,
         responses: responses,
@@ -73,7 +75,7 @@ defmodule OpenapiParser.Spec.V3.Components do
           Enum.reduce_while(component_map, {:ok, %{}}, fn {name, value}, {:ok, acc} ->
             # Check if it's a reference
             result =
-              if Map.has_key?(value, "$ref") do
+              if Map.has_key?(value, :"$ref") do
                 V3.Reference.new(value)
               else
                 parser_fn.(value)

@@ -5,6 +5,7 @@ defmodule OpenapiParser.Spec.V3.OAuthFlows do
   Allows configuration of the supported OAuth Flows.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.V3.OAuthFlow
   alias OpenapiParser.Validation
 
@@ -22,10 +23,11 @@ defmodule OpenapiParser.Spec.V3.OAuthFlows do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
-    with {:ok, implicit} <- parse_flow(data, "implicit"),
-         {:ok, password} <- parse_flow(data, "password"),
-         {:ok, client_credentials} <- parse_flow(data, "clientCredentials"),
-         {:ok, authorization_code} <- parse_flow(data, "authorizationCode") do
+    data = KeyNormalizer.normalize_shallow(data)
+    with {:ok, implicit} <- parse_flow(data, :implicit),
+         {:ok, password} <- parse_flow(data, :password),
+         {:ok, client_credentials} <- parse_flow(data, :clientCredentials),
+         {:ok, authorization_code} <- parse_flow(data, :authorizationCode) do
       flows = %__MODULE__{
         implicit: implicit,
         password: password,

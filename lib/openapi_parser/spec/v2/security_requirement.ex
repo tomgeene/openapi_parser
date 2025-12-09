@@ -6,6 +6,8 @@ defmodule OpenapiParser.Spec.V2.SecurityRequirement do
   Maps security scheme names to lists of required scopes.
   """
 
+  alias OpenapiParser.KeyNormalizer
+
   @type t :: %__MODULE__{
           requirements: %{String.t() => [String.t()]}
         }
@@ -17,6 +19,7 @@ defmodule OpenapiParser.Spec.V2.SecurityRequirement do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
     security = %__MODULE__{
       requirements: data
     }

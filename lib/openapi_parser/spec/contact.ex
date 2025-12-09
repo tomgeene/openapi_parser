@@ -5,6 +5,7 @@ defmodule OpenapiParser.Spec.Contact do
   Shared across OpenAPI V2, V3.0, and V3.1.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Validation
 
   @type t :: %__MODULE__{
@@ -20,10 +21,11 @@ defmodule OpenapiParser.Spec.Contact do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
     contact = %__MODULE__{
-      name: Map.get(data, "name"),
-      url: Map.get(data, "url"),
-      email: Map.get(data, "email")
+      name: Map.get(data, :name),
+      url: Map.get(data, :url),
+      email: Map.get(data, :email)
     }
 
     {:ok, contact}

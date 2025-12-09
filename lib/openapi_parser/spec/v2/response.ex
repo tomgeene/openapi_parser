@@ -3,6 +3,7 @@ defmodule OpenapiParser.Spec.V2.Response do
   Response Object for Swagger 2.0.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.V2.{Header, Schema}
   alias OpenapiParser.Validation
 
@@ -22,17 +23,18 @@ defmodule OpenapiParser.Spec.V2.Response do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
     # Handle $ref
-    if Map.has_key?(data, "$ref") do
-      {:ok, %__MODULE__{ref: data["$ref"]}}
+    if Map.has_key?(data, :"$ref") do
+      {:ok, %__MODULE__{ref: data[:"$ref"]}}
     else
       with {:ok, schema} <- parse_schema(data),
            {:ok, headers} <- parse_headers(data) do
         response = %__MODULE__{
-          description: Map.get(data, "description"),
+          description: Map.get(data, :description),
           schema: schema,
           headers: headers,
-          examples: Map.get(data, "examples"),
+          examples: Map.get(data, :examples),
           ref: nil
         }
 
@@ -41,13 +43,13 @@ defmodule OpenapiParser.Spec.V2.Response do
     end
   end
 
-  defp parse_schema(%{"schema" => schema_data}) when is_map(schema_data) do
+  defp parse_schema(%{:schema => schema_data}) when is_map(schema_data) do
     Schema.new(schema_data)
   end
 
   defp parse_schema(_), do: {:ok, nil}
 
-  defp parse_headers(%{"headers" => headers}) when is_map(headers) do
+  defp parse_headers(%{:headers => headers}) when is_map(headers) do
     result =
       Enum.reduce_while(headers, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
         case Header.new(value) do

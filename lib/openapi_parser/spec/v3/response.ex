@@ -5,6 +5,7 @@ defmodule OpenapiParser.Spec.V3.Response do
   Describes a single response from an API Operation.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.V3.{Header, Link, MediaType, Reference}
   alias OpenapiParser.Validation
 
@@ -22,11 +23,12 @@ defmodule OpenapiParser.Spec.V3.Response do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
     with {:ok, headers} <- parse_headers(data),
          {:ok, content} <- parse_content(data),
          {:ok, links} <- parse_links(data) do
       response = %__MODULE__{
-        description: Map.get(data, "description"),
+        description: Map.get(data, :description),
         headers: headers,
         content: content,
         links: links
@@ -36,11 +38,11 @@ defmodule OpenapiParser.Spec.V3.Response do
     end
   end
 
-  defp parse_headers(%{"headers" => headers}) when is_map(headers) do
+  defp parse_headers(%{:headers => headers}) when is_map(headers) do
     result =
       Enum.reduce_while(headers, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
         result =
-          if Map.has_key?(value, "$ref") do
+          if Map.has_key?(value, :"$ref") do
             Reference.new(value)
           else
             Header.new(value)
@@ -57,7 +59,7 @@ defmodule OpenapiParser.Spec.V3.Response do
 
   defp parse_headers(_), do: {:ok, nil}
 
-  defp parse_content(%{"content" => content}) when is_map(content) do
+  defp parse_content(%{:content => content}) when is_map(content) do
     result =
       Enum.reduce_while(content, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
         case MediaType.new(value) do
@@ -71,11 +73,11 @@ defmodule OpenapiParser.Spec.V3.Response do
 
   defp parse_content(_), do: {:ok, nil}
 
-  defp parse_links(%{"links" => links}) when is_map(links) do
+  defp parse_links(%{:links => links}) when is_map(links) do
     result =
       Enum.reduce_while(links, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
         result =
-          if Map.has_key?(value, "$ref") do
+          if Map.has_key?(value, :"$ref") do
             Reference.new(value)
           else
             Link.new(value)

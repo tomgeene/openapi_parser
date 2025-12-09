@@ -5,6 +5,7 @@ defmodule OpenapiParser.Spec.V3.Responses do
   A container for the expected responses of an operation.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.V3.{Reference, Response}
   alias OpenapiParser.Validation
 
@@ -19,10 +20,11 @@ defmodule OpenapiParser.Spec.V3.Responses do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
     result =
       Enum.reduce_while(data, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
         result =
-          if Map.has_key?(value, "$ref") do
+          if Map.has_key?(value, :"$ref") do
             Reference.new(value)
           else
             Response.new(value)

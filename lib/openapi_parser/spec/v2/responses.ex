@@ -4,6 +4,7 @@ defmodule OpenapiParser.Spec.V2.Responses do
   Container for response objects indexed by HTTP status code.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.V2.Response
   alias OpenapiParser.Validation
 
@@ -18,6 +19,7 @@ defmodule OpenapiParser.Spec.V2.Responses do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
     result =
       Enum.reduce_while(data, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
         case Response.new(value) do

@@ -5,6 +5,7 @@ defmodule OpenapiParser.Spec.V3.Reference do
   A simple object to allow referencing other components in the specification.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Validation
 
   @type t :: %__MODULE__{
@@ -20,10 +21,11 @@ defmodule OpenapiParser.Spec.V3.Reference do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
     reference = %__MODULE__{
-      ref: Map.get(data, "$ref"),
-      summary: Map.get(data, "summary"),
-      description: Map.get(data, "description")
+      ref: Map.get(data, :"$ref"),
+      summary: Map.get(data, :summary),
+      description: Map.get(data, :description)
     }
 
     {:ok, reference}

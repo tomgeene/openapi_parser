@@ -3,6 +3,7 @@ defmodule OpenapiParser.Spec.V2.SecurityScheme do
   Security Scheme Object for Swagger 2.0.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Validation
 
   @type scheme_type :: :basic | :apiKey | :oauth2
@@ -36,15 +37,16 @@ defmodule OpenapiParser.Spec.V2.SecurityScheme do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
     scheme = %__MODULE__{
-      type: parse_type(data["type"]),
-      description: Map.get(data, "description"),
-      name: Map.get(data, "name"),
-      location: parse_location(data["in"]),
-      flow: parse_flow(data["flow"]),
-      authorization_url: Map.get(data, "authorizationUrl"),
-      token_url: Map.get(data, "tokenUrl"),
-      scopes: Map.get(data, "scopes")
+      type: parse_type(data[:type]),
+      description: Map.get(data, :description),
+      name: Map.get(data, :name),
+      location: parse_location(data[:in]),
+      flow: parse_flow(data[:flow]),
+      authorization_url: Map.get(data, :authorizationUrl),
+      token_url: Map.get(data, :tokenUrl),
+      scopes: Map.get(data, :scopes)
     }
 
     {:ok, scheme}

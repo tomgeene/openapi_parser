@@ -3,6 +3,7 @@ defmodule OpenapiParser.Spec.V3.Header do
   Header Object for OpenAPI V3.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.V3.{Example, Reference, Schema}
   alias OpenapiParser.Validation
 
@@ -38,18 +39,19 @@ defmodule OpenapiParser.Spec.V3.Header do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
     with {:ok, schema} <- parse_schema(data),
          {:ok, examples} <- parse_examples(data) do
       header = %__MODULE__{
-        description: Map.get(data, "description"),
-        required: Map.get(data, "required", false),
-        deprecated: Map.get(data, "deprecated"),
-        allow_empty_value: Map.get(data, "allowEmptyValue"),
-        style: Map.get(data, "style"),
-        explode: Map.get(data, "explode"),
-        allow_reserved: Map.get(data, "allowReserved"),
+        description: Map.get(data, :description),
+        required: Map.get(data, :required, false),
+        deprecated: Map.get(data, :deprecated),
+        allow_empty_value: Map.get(data, :allowEmptyValue),
+        style: Map.get(data, :style),
+        explode: Map.get(data, :explode),
+        allow_reserved: Map.get(data, :allowReserved),
         schema: schema,
-        example: Map.get(data, "example"),
+        example: Map.get(data, :example),
         examples: examples
       }
 
@@ -57,17 +59,17 @@ defmodule OpenapiParser.Spec.V3.Header do
     end
   end
 
-  defp parse_schema(%{"schema" => schema_data}) when is_map(schema_data) do
+  defp parse_schema(%{:schema => schema_data}) when is_map(schema_data) do
     Schema.new(schema_data)
   end
 
   defp parse_schema(_), do: {:ok, nil}
 
-  defp parse_examples(%{"examples" => examples}) when is_map(examples) do
+  defp parse_examples(%{:examples => examples}) when is_map(examples) do
     result =
       Enum.reduce_while(examples, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
         result =
-          if Map.has_key?(value, "$ref") do
+          if Map.has_key?(value, :"$ref") do
             Reference.new(value)
           else
             Example.new(value)

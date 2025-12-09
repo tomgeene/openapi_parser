@@ -3,6 +3,7 @@ defmodule OpenapiParser.Spec.V2.Xml do
   XML Object for Swagger 2.0.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Validation
 
   @type t :: %__MODULE__{
@@ -20,12 +21,13 @@ defmodule OpenapiParser.Spec.V2.Xml do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
     xml = %__MODULE__{
-      name: Map.get(data, "name"),
-      namespace: Map.get(data, "namespace"),
-      prefix: Map.get(data, "prefix"),
-      attribute: Map.get(data, "attribute"),
-      wrapped: Map.get(data, "wrapped")
+      name: Map.get(data, :name),
+      namespace: Map.get(data, :namespace),
+      prefix: Map.get(data, :prefix),
+      attribute: Map.get(data, :attribute),
+      wrapped: Map.get(data, :wrapped)
     }
 
     {:ok, xml}

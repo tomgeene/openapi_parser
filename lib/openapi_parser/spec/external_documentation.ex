@@ -5,6 +5,7 @@ defmodule OpenapiParser.Spec.ExternalDocumentation do
   Shared across OpenAPI V2, V3.0, and V3.1.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Validation
 
   @type t :: %__MODULE__{
@@ -19,9 +20,10 @@ defmodule OpenapiParser.Spec.ExternalDocumentation do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
     docs = %__MODULE__{
-      url: Map.get(data, "url"),
-      description: Map.get(data, "description")
+      url: Map.get(data, :url),
+      description: Map.get(data, :description)
     }
 
     {:ok, docs}

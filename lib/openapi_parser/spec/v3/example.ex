@@ -3,6 +3,7 @@ defmodule OpenapiParser.Spec.V3.Example do
   Example Object for OpenAPI V3.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Validation
 
   @type t :: %__MODULE__{
@@ -19,11 +20,12 @@ defmodule OpenapiParser.Spec.V3.Example do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
     example = %__MODULE__{
-      summary: Map.get(data, "summary"),
-      description: Map.get(data, "description"),
-      value: Map.get(data, "value"),
-      external_value: Map.get(data, "externalValue")
+      summary: Map.get(data, :summary),
+      description: Map.get(data, :description),
+      value: Map.get(data, :value),
+      external_value: Map.get(data, :externalValue)
     }
 
     {:ok, example}

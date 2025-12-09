@@ -5,6 +5,7 @@ defmodule OpenapiParser.Spec.Tag do
   Shared across OpenAPI V2, V3.0, and V3.1.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.ExternalDocumentation
   alias OpenapiParser.Validation
 
@@ -21,10 +22,11 @@ defmodule OpenapiParser.Spec.Tag do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
     with {:ok, external_docs} <- parse_external_docs(data) do
       tag = %__MODULE__{
-        name: Map.get(data, "name"),
-        description: Map.get(data, "description"),
+        name: Map.get(data, :name),
+        description: Map.get(data, :description),
         external_docs: external_docs
       }
 
@@ -36,7 +38,7 @@ defmodule OpenapiParser.Spec.Tag do
     {:error, "tag must be a map"}
   end
 
-  defp parse_external_docs(%{"externalDocs" => docs_data}) when is_map(docs_data) do
+  defp parse_external_docs(%{:externalDocs => docs_data}) when is_map(docs_data) do
     ExternalDocumentation.new(docs_data)
   end
 

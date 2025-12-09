@@ -5,6 +5,7 @@ defmodule OpenapiParser.Spec.V3.Server do
   Represents a Server.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.V3.ServerVariable
   alias OpenapiParser.Validation
 
@@ -21,10 +22,11 @@ defmodule OpenapiParser.Spec.V3.Server do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
     with {:ok, variables} <- parse_variables(data) do
       server = %__MODULE__{
-        url: Map.get(data, "url"),
-        description: Map.get(data, "description"),
+        url: Map.get(data, :url),
+        description: Map.get(data, :description),
         variables: variables
       }
 
@@ -32,7 +34,7 @@ defmodule OpenapiParser.Spec.V3.Server do
     end
   end
 
-  defp parse_variables(%{"variables" => vars}) when is_map(vars) do
+  defp parse_variables(%{:variables => vars}) when is_map(vars) do
     result =
       Enum.reduce_while(vars, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
         case ServerVariable.new(value) do

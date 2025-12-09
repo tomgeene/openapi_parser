@@ -5,6 +5,7 @@ defmodule OpenapiParser.Spec.V3.MediaType do
   Provides schema and examples for the media type identified by its key.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.V3.{Encoding, Example, Reference, Schema}
   alias OpenapiParser.Validation
 
@@ -22,12 +23,13 @@ defmodule OpenapiParser.Spec.V3.MediaType do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
     with {:ok, schema} <- parse_schema(data),
          {:ok, examples} <- parse_examples(data),
          {:ok, encoding} <- parse_encoding(data) do
       media_type = %__MODULE__{
         schema: schema,
-        example: Map.get(data, "example"),
+        example: Map.get(data, :example),
         examples: examples,
         encoding: encoding
       }
@@ -36,17 +38,17 @@ defmodule OpenapiParser.Spec.V3.MediaType do
     end
   end
 
-  defp parse_schema(%{"schema" => schema_data}) when is_map(schema_data) do
+  defp parse_schema(%{:schema => schema_data}) when is_map(schema_data) do
     Schema.new(schema_data)
   end
 
   defp parse_schema(_), do: {:ok, nil}
 
-  defp parse_examples(%{"examples" => examples}) when is_map(examples) do
+  defp parse_examples(%{:examples => examples}) when is_map(examples) do
     result =
       Enum.reduce_while(examples, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
         result =
-          if Map.has_key?(value, "$ref") do
+          if Map.has_key?(value, :"$ref") do
             Reference.new(value)
           else
             Example.new(value)
@@ -63,7 +65,7 @@ defmodule OpenapiParser.Spec.V3.MediaType do
 
   defp parse_examples(_), do: {:ok, nil}
 
-  defp parse_encoding(%{"encoding" => encoding}) when is_map(encoding) do
+  defp parse_encoding(%{:encoding => encoding}) when is_map(encoding) do
     result =
       Enum.reduce_while(encoding, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
         case Encoding.new(value) do
