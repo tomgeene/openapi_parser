@@ -5,6 +5,7 @@ defmodule OpenapiParser.Spec.V3.Operation do
   Describes a single API operation on a path.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.{ExternalDocumentation, V3}
   alias OpenapiParser.Validation
 
@@ -43,6 +44,8 @@ defmodule OpenapiParser.Spec.V3.Operation do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
+
     with {:ok, external_docs} <- parse_external_docs(data),
          {:ok, parameters} <- parse_parameters(data),
          {:ok, request_body} <- parse_request_body(data),
@@ -51,16 +54,16 @@ defmodule OpenapiParser.Spec.V3.Operation do
          {:ok, security} <- parse_security(data),
          {:ok, servers} <- parse_servers(data) do
       operation = %__MODULE__{
-        tags: Map.get(data, "tags"),
-        summary: Map.get(data, "summary"),
-        description: Map.get(data, "description"),
+        tags: Map.get(data, :tags),
+        summary: Map.get(data, :summary),
+        description: Map.get(data, :description),
         external_docs: external_docs,
-        operation_id: Map.get(data, "operationId"),
+        operation_id: Map.get(data, :operationId),
         parameters: parameters,
         request_body: request_body,
         responses: responses,
         callbacks: callbacks,
-        deprecated: Map.get(data, "deprecated"),
+        deprecated: Map.get(data, :deprecated),
         security: security,
         servers: servers
       }
@@ -69,20 +72,23 @@ defmodule OpenapiParser.Spec.V3.Operation do
     end
   end
 
-  defp parse_external_docs(%{"externalDocs" => docs_data}) when is_map(docs_data) do
+  defp parse_external_docs(%{:externalDocs => docs_data}) when is_map(docs_data) do
     ExternalDocumentation.new(docs_data)
   end
 
   defp parse_external_docs(_), do: {:ok, nil}
 
-  defp parse_parameters(%{"parameters" => params}) when is_list(params) do
+  defp parse_parameters(%{:parameters => params}) when is_list(params) do
     result =
       Enum.reduce_while(params, {:ok, []}, fn param_data, {:ok, acc} ->
+        # Normalize the param_data before checking for $ref
+        normalized_param = KeyNormalizer.normalize_shallow(param_data)
+
         result =
-          if Map.has_key?(param_data, "$ref") do
-            V3.Reference.new(param_data)
+          if Map.has_key?(normalized_param, :"$ref") do
+            V3.Reference.new(normalized_param)
           else
-            V3.Parameter.new(param_data)
+            V3.Parameter.new(normalized_param)
           end
 
         case result do
@@ -96,30 +102,36 @@ defmodule OpenapiParser.Spec.V3.Operation do
 
   defp parse_parameters(_), do: {:ok, nil}
 
-  defp parse_request_body(%{"requestBody" => body_data}) when is_map(body_data) do
-    if Map.has_key?(body_data, "$ref") do
-      V3.Reference.new(body_data)
+  defp parse_request_body(%{:requestBody => body_data}) when is_map(body_data) do
+    # Normalize the body_data before checking for $ref
+    normalized_body = KeyNormalizer.normalize_shallow(body_data)
+
+    if Map.has_key?(normalized_body, :"$ref") do
+      V3.Reference.new(normalized_body)
     else
-      V3.RequestBody.new(body_data)
+      V3.RequestBody.new(normalized_body)
     end
   end
 
   defp parse_request_body(_), do: {:ok, nil}
 
-  defp parse_responses(%{"responses" => responses_data}) when is_map(responses_data) do
+  defp parse_responses(%{:responses => responses_data}) when is_map(responses_data) do
     V3.Responses.new(responses_data)
   end
 
   defp parse_responses(_), do: {:error, "responses is required"}
 
-  defp parse_callbacks(%{"callbacks" => callbacks}) when is_map(callbacks) do
+  defp parse_callbacks(%{:callbacks => callbacks}) when is_map(callbacks) do
     result =
       Enum.reduce_while(callbacks, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
+        # Normalize the value before checking for $ref
+        normalized_value = KeyNormalizer.normalize_shallow(value)
+
         result =
-          if Map.has_key?(value, "$ref") do
-            V3.Reference.new(value)
+          if Map.has_key?(normalized_value, :"$ref") do
+            V3.Reference.new(normalized_value)
           else
-            V3.Callback.new(value)
+            V3.Callback.new(normalized_value)
           end
 
         case result do
@@ -133,7 +145,7 @@ defmodule OpenapiParser.Spec.V3.Operation do
 
   defp parse_callbacks(_), do: {:ok, nil}
 
-  defp parse_security(%{"security" => security}) when is_list(security) do
+  defp parse_security(%{:security => security}) when is_list(security) do
     result =
       Enum.reduce_while(security, {:ok, []}, fn sec_data, {:ok, acc} ->
         case V3.SecurityRequirement.new(sec_data) do
@@ -147,7 +159,7 @@ defmodule OpenapiParser.Spec.V3.Operation do
 
   defp parse_security(_), do: {:ok, nil}
 
-  defp parse_servers(%{"servers" => servers}) when is_list(servers) do
+  defp parse_servers(%{:servers => servers}) when is_list(servers) do
     result =
       Enum.reduce_while(servers, {:ok, []}, fn server_data, {:ok, acc} ->
         case V3.Server.new(server_data) do

@@ -3,6 +3,7 @@ defmodule OpenapiParser.Spec.V2.License do
   License information for the exposed API (OpenAPI V2/Swagger 2.0).
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Validation
 
   @type t :: %__MODULE__{
@@ -17,9 +18,11 @@ defmodule OpenapiParser.Spec.V2.License do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
+
     license = %__MODULE__{
-      name: Map.get(data, "name"),
-      url: Map.get(data, "url")
+      name: Map.get(data, :name),
+      url: Map.get(data, :url)
     }
 
     {:ok, license}

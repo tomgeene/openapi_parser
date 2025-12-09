@@ -5,6 +5,7 @@ defmodule OpenapiParser.Spec.V3.OAuthFlow do
   Configuration details for a supported OAuth Flow.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Validation
 
   @type t :: %__MODULE__{
@@ -21,11 +22,13 @@ defmodule OpenapiParser.Spec.V3.OAuthFlow do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
+
     flow = %__MODULE__{
-      authorization_url: Map.get(data, "authorizationUrl"),
-      token_url: Map.get(data, "tokenUrl"),
-      refresh_url: Map.get(data, "refreshUrl"),
-      scopes: Map.get(data, "scopes", %{})
+      authorization_url: Map.get(data, :authorizationUrl),
+      token_url: Map.get(data, :tokenUrl),
+      refresh_url: Map.get(data, :refreshUrl),
+      scopes: Map.get(data, :scopes, %{})
     }
 
     {:ok, flow}

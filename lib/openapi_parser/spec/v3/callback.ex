@@ -5,6 +5,7 @@ defmodule OpenapiParser.Spec.V3.Callback do
   A map of possible out-of band callbacks related to the parent operation.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.V3.PathItem
   alias OpenapiParser.Validation
 
@@ -19,6 +20,8 @@ defmodule OpenapiParser.Spec.V3.Callback do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
+
     result =
       Enum.reduce_while(data, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
         case PathItem.new(value) do

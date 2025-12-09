@@ -5,6 +5,7 @@ defmodule OpenapiParser.Spec.V3.SecurityScheme do
   Defines a security scheme that can be used by the operations.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.V3.OAuthFlows
   alias OpenapiParser.Validation
 
@@ -41,16 +42,18 @@ defmodule OpenapiParser.Spec.V3.SecurityScheme do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
+
     with {:ok, flows} <- parse_flows(data) do
       scheme = %__MODULE__{
-        type: parse_type(data["type"]),
-        description: Map.get(data, "description"),
-        name: Map.get(data, "name"),
-        location: parse_location(data["in"]),
-        scheme: Map.get(data, "scheme"),
-        bearer_format: Map.get(data, "bearerFormat"),
+        type: parse_type(data[:type]),
+        description: Map.get(data, :description),
+        name: Map.get(data, :name),
+        location: parse_location(data[:in]),
+        scheme: Map.get(data, :scheme),
+        bearer_format: Map.get(data, :bearerFormat),
         flows: flows,
-        open_id_connect_url: Map.get(data, "openIdConnectUrl")
+        open_id_connect_url: Map.get(data, :openIdConnectUrl)
       }
 
       {:ok, scheme}
@@ -69,7 +72,7 @@ defmodule OpenapiParser.Spec.V3.SecurityScheme do
   defp parse_location("cookie"), do: :cookie
   defp parse_location(_), do: nil
 
-  defp parse_flows(%{"flows" => flows_data}) when is_map(flows_data) do
+  defp parse_flows(%{:flows => flows_data}) when is_map(flows_data) do
     OAuthFlows.new(flows_data)
   end
 

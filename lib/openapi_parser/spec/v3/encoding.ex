@@ -5,6 +5,7 @@ defmodule OpenapiParser.Spec.V3.Encoding do
   A single encoding definition applied to a single schema property.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.V3.Header
   alias OpenapiParser.Validation
 
@@ -23,28 +24,33 @@ defmodule OpenapiParser.Spec.V3.Encoding do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
+
     with {:ok, headers} <- parse_headers(data) do
       encoding = %__MODULE__{
-        content_type: Map.get(data, "contentType"),
+        content_type: Map.get(data, :contentType),
         headers: headers,
-        style: Map.get(data, "style"),
-        explode: Map.get(data, "explode"),
-        allow_reserved: Map.get(data, "allowReserved")
+        style: Map.get(data, :style),
+        explode: Map.get(data, :explode),
+        allow_reserved: Map.get(data, :allowReserved)
       }
 
       {:ok, encoding}
     end
   end
 
-  defp parse_headers(%{"headers" => headers}) when is_map(headers) do
+  defp parse_headers(%{:headers => headers}) when is_map(headers) do
     result =
       Enum.reduce_while(headers, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
+        # Normalize the value before checking for $ref
+        normalized_value = KeyNormalizer.normalize_shallow(value)
+
         # Headers can be Reference or Header objects
         result =
-          if Map.has_key?(value, "$ref") do
-            OpenapiParser.Spec.V3.Reference.new(value)
+          if Map.has_key?(normalized_value, :"$ref") do
+            OpenapiParser.Spec.V3.Reference.new(normalized_value)
           else
-            Header.new(value)
+            Header.new(normalized_value)
           end
 
         case result do

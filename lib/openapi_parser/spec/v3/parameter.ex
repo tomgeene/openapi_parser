@@ -5,6 +5,7 @@ defmodule OpenapiParser.Spec.V3.Parameter do
   Describes a single operation parameter.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.V3.{Example, MediaType, Reference, Schema}
   alias OpenapiParser.Validation
 
@@ -48,21 +49,23 @@ defmodule OpenapiParser.Spec.V3.Parameter do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
+
     with {:ok, schema} <- parse_schema(data),
          {:ok, examples} <- parse_examples(data),
          {:ok, content} <- parse_content(data) do
       parameter = %__MODULE__{
-        name: Map.get(data, "name"),
-        location: parse_location(data["in"]),
-        description: Map.get(data, "description"),
-        required: Map.get(data, "required", false),
-        deprecated: Map.get(data, "deprecated"),
-        allow_empty_value: Map.get(data, "allowEmptyValue"),
-        style: Map.get(data, "style"),
-        explode: Map.get(data, "explode"),
-        allow_reserved: Map.get(data, "allowReserved"),
+        name: Map.get(data, :name),
+        location: parse_location(data[:in]),
+        description: Map.get(data, :description),
+        required: Map.get(data, :required, false),
+        deprecated: Map.get(data, :deprecated),
+        allow_empty_value: Map.get(data, :allowEmptyValue),
+        style: Map.get(data, :style),
+        explode: Map.get(data, :explode),
+        allow_reserved: Map.get(data, :allowReserved),
         schema: schema,
-        example: Map.get(data, "example"),
+        example: Map.get(data, :example),
         examples: examples,
         content: content
       }
@@ -77,20 +80,23 @@ defmodule OpenapiParser.Spec.V3.Parameter do
   defp parse_location("cookie"), do: :cookie
   defp parse_location(_), do: nil
 
-  defp parse_schema(%{"schema" => schema_data}) when is_map(schema_data) do
+  defp parse_schema(%{:schema => schema_data}) when is_map(schema_data) do
     Schema.new(schema_data)
   end
 
   defp parse_schema(_), do: {:ok, nil}
 
-  defp parse_examples(%{"examples" => examples}) when is_map(examples) do
+  defp parse_examples(%{:examples => examples}) when is_map(examples) do
     result =
       Enum.reduce_while(examples, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
+        # Normalize the value before checking for $ref
+        normalized_value = KeyNormalizer.normalize_shallow(value)
+
         result =
-          if Map.has_key?(value, "$ref") do
-            Reference.new(value)
+          if Map.has_key?(normalized_value, :"$ref") do
+            Reference.new(normalized_value)
           else
-            Example.new(value)
+            Example.new(normalized_value)
           end
 
         case result do
@@ -104,7 +110,7 @@ defmodule OpenapiParser.Spec.V3.Parameter do
 
   defp parse_examples(_), do: {:ok, nil}
 
-  defp parse_content(%{"content" => content}) when is_map(content) do
+  defp parse_content(%{:content => content}) when is_map(content) do
     result =
       Enum.reduce_while(content, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
         case MediaType.new(value) do

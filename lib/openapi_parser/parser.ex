@@ -8,6 +8,7 @@ defmodule OpenapiParser.Parser do
 
   alias OpenapiParser.Parser.{V2, V3}
   alias OpenapiParser.Spec
+  alias OpenapiParser.KeyNormalizer
 
   @doc """
   Parses an OpenAPI specification from a string.

@@ -8,6 +8,7 @@ defmodule OpenapiParser.Spec.V3_0.OpenAPI do
   For now, it simply delegates to V3.OpenAPI since the structures are the same.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.V3
 
   @type t :: V3.OpenAPI.t()

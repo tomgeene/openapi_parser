@@ -4,6 +4,7 @@ defmodule OpenapiParser.Spec.V2.PathItem do
   Describes the operations available on a single path.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.V2.{Operation, Parameter}
   alias OpenapiParser.Validation
 
@@ -26,17 +27,18 @@ defmodule OpenapiParser.Spec.V2.PathItem do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
     # Handle $ref
-    if Map.has_key?(data, "$ref") do
-      {:ok, %__MODULE__{ref: data["$ref"]}}
+    if Map.has_key?(data, :"$ref") do
+      {:ok, %__MODULE__{ref: data[:"$ref"]}}
     else
-      with {:ok, get} <- parse_operation(data, "get"),
-           {:ok, put} <- parse_operation(data, "put"),
-           {:ok, post} <- parse_operation(data, "post"),
-           {:ok, delete} <- parse_operation(data, "delete"),
-           {:ok, options} <- parse_operation(data, "options"),
-           {:ok, head} <- parse_operation(data, "head"),
-           {:ok, patch} <- parse_operation(data, "patch"),
+      with {:ok, get} <- parse_operation(data, :get),
+           {:ok, put} <- parse_operation(data, :put),
+           {:ok, post} <- parse_operation(data, :post),
+           {:ok, delete} <- parse_operation(data, :delete),
+           {:ok, options} <- parse_operation(data, :options),
+           {:ok, head} <- parse_operation(data, :head),
+           {:ok, patch} <- parse_operation(data, :patch),
            {:ok, parameters} <- parse_parameters(data) do
         path_item = %__MODULE__{
           get: get,
@@ -62,7 +64,7 @@ defmodule OpenapiParser.Spec.V2.PathItem do
     end
   end
 
-  defp parse_parameters(%{"parameters" => params}) when is_list(params) do
+  defp parse_parameters(%{:parameters => params}) when is_list(params) do
     result =
       Enum.reduce_while(params, {:ok, []}, fn param_data, {:ok, acc} ->
         case Parameter.new(param_data) do

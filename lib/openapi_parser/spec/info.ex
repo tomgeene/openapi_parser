@@ -6,6 +6,7 @@ defmodule OpenapiParser.Spec.Info do
   Note: License object varies between versions, so it's handled separately.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.Contact
   alias OpenapiParser.Validation
 
@@ -28,13 +29,15 @@ defmodule OpenapiParser.Spec.Info do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
+
     with {:ok, contact} <- parse_contact(data) do
       info = %__MODULE__{
-        title: Map.get(data, "title"),
-        version: Map.get(data, "version"),
-        summary: Map.get(data, "summary"),
-        description: Map.get(data, "description"),
-        terms_of_service: Map.get(data, "termsOfService"),
+        title: Map.get(data, :title),
+        version: Map.get(data, :version),
+        summary: Map.get(data, :summary),
+        description: Map.get(data, :description),
+        terms_of_service: Map.get(data, :termsOfService),
         contact: contact,
         license: nil
       }
@@ -43,7 +46,7 @@ defmodule OpenapiParser.Spec.Info do
     end
   end
 
-  defp parse_contact(%{"contact" => contact_data}) when is_map(contact_data) do
+  defp parse_contact(%{:contact => contact_data}) when is_map(contact_data) do
     Contact.new(contact_data)
   end
 

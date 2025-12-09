@@ -5,6 +5,7 @@ defmodule OpenapiParser.Spec.V3.ServerVariable do
   An object representing a Server Variable for server URL template substitution.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Validation
 
   @type t :: %__MODULE__{
@@ -20,10 +21,12 @@ defmodule OpenapiParser.Spec.V3.ServerVariable do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
+
     variable = %__MODULE__{
-      enum: Map.get(data, "enum"),
-      default: Map.get(data, "default"),
-      description: Map.get(data, "description")
+      enum: Map.get(data, :enum),
+      default: Map.get(data, :default),
+      description: Map.get(data, :description)
     }
 
     {:ok, variable}

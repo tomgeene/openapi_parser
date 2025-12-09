@@ -4,6 +4,7 @@ defmodule OpenapiParser.Spec.V2.Operation do
   Describes a single API operation on a path.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.ExternalDocumentation
   alias OpenapiParser.Spec.V2.{Parameter, Responses, SecurityRequirement}
   alias OpenapiParser.Validation
@@ -43,22 +44,24 @@ defmodule OpenapiParser.Spec.V2.Operation do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
+
     with {:ok, external_docs} <- parse_external_docs(data),
          {:ok, parameters} <- parse_parameters(data),
          {:ok, responses} <- parse_responses(data),
          {:ok, security} <- parse_security(data) do
       operation = %__MODULE__{
-        tags: Map.get(data, "tags"),
-        summary: Map.get(data, "summary"),
-        description: Map.get(data, "description"),
+        tags: Map.get(data, :tags),
+        summary: Map.get(data, :summary),
+        description: Map.get(data, :description),
         external_docs: external_docs,
-        operation_id: Map.get(data, "operationId"),
-        consumes: Map.get(data, "consumes"),
-        produces: Map.get(data, "produces"),
+        operation_id: Map.get(data, :operationId),
+        consumes: Map.get(data, :consumes),
+        produces: Map.get(data, :produces),
         parameters: parameters,
         responses: responses,
-        schemes: Map.get(data, "schemes"),
-        deprecated: Map.get(data, "deprecated"),
+        schemes: Map.get(data, :schemes),
+        deprecated: Map.get(data, :deprecated),
         security: security
       }
 
@@ -66,13 +69,13 @@ defmodule OpenapiParser.Spec.V2.Operation do
     end
   end
 
-  defp parse_external_docs(%{"externalDocs" => docs_data}) when is_map(docs_data) do
+  defp parse_external_docs(%{:externalDocs => docs_data}) when is_map(docs_data) do
     ExternalDocumentation.new(docs_data)
   end
 
   defp parse_external_docs(_), do: {:ok, nil}
 
-  defp parse_parameters(%{"parameters" => params}) when is_list(params) do
+  defp parse_parameters(%{:parameters => params}) when is_list(params) do
     result =
       Enum.reduce_while(params, {:ok, []}, fn param_data, {:ok, acc} ->
         case Parameter.new(param_data) do
@@ -86,13 +89,13 @@ defmodule OpenapiParser.Spec.V2.Operation do
 
   defp parse_parameters(_), do: {:ok, nil}
 
-  defp parse_responses(%{"responses" => responses_data}) when is_map(responses_data) do
+  defp parse_responses(%{:responses => responses_data}) when is_map(responses_data) do
     Responses.new(responses_data)
   end
 
   defp parse_responses(_), do: {:error, "responses is required"}
 
-  defp parse_security(%{"security" => security}) when is_list(security) do
+  defp parse_security(%{:security => security}) when is_list(security) do
     result =
       Enum.reduce_while(security, {:ok, []}, fn sec_data, {:ok, acc} ->
         case SecurityRequirement.new(sec_data) do

@@ -5,6 +5,7 @@ defmodule OpenapiParser.Spec.V3.PathItem do
   Describes the operations available on a single path.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.V3.{Operation, Parameter, Reference, Server}
   alias OpenapiParser.Validation
 
@@ -43,19 +44,21 @@ defmodule OpenapiParser.Spec.V3.PathItem do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
-    with {:ok, get} <- parse_operation(data, "get"),
-         {:ok, put} <- parse_operation(data, "put"),
-         {:ok, post} <- parse_operation(data, "post"),
-         {:ok, delete} <- parse_operation(data, "delete"),
-         {:ok, options} <- parse_operation(data, "options"),
-         {:ok, head} <- parse_operation(data, "head"),
-         {:ok, patch} <- parse_operation(data, "patch"),
-         {:ok, trace} <- parse_operation(data, "trace"),
+    data = KeyNormalizer.normalize_shallow(data)
+
+    with {:ok, get} <- parse_operation(data, :get),
+         {:ok, put} <- parse_operation(data, :put),
+         {:ok, post} <- parse_operation(data, :post),
+         {:ok, delete} <- parse_operation(data, :delete),
+         {:ok, options} <- parse_operation(data, :options),
+         {:ok, head} <- parse_operation(data, :head),
+         {:ok, patch} <- parse_operation(data, :patch),
+         {:ok, trace} <- parse_operation(data, :trace),
          {:ok, servers} <- parse_servers(data),
          {:ok, parameters} <- parse_parameters(data) do
       path_item = %__MODULE__{
-        summary: Map.get(data, "summary"),
-        description: Map.get(data, "description"),
+        summary: Map.get(data, :summary),
+        description: Map.get(data, :description),
         get: get,
         put: put,
         post: post,
@@ -79,7 +82,7 @@ defmodule OpenapiParser.Spec.V3.PathItem do
     end
   end
 
-  defp parse_servers(%{"servers" => servers}) when is_list(servers) do
+  defp parse_servers(%{:servers => servers}) when is_list(servers) do
     result =
       Enum.reduce_while(servers, {:ok, []}, fn server_data, {:ok, acc} ->
         case Server.new(server_data) do
@@ -93,11 +96,11 @@ defmodule OpenapiParser.Spec.V3.PathItem do
 
   defp parse_servers(_), do: {:ok, nil}
 
-  defp parse_parameters(%{"parameters" => params}) when is_list(params) do
+  defp parse_parameters(%{:parameters => params}) when is_list(params) do
     result =
       Enum.reduce_while(params, {:ok, []}, fn param_data, {:ok, acc} ->
         result =
-          if Map.has_key?(param_data, "$ref") do
+          if Map.has_key?(param_data, :"$ref") do
             Reference.new(param_data)
           else
             Parameter.new(param_data)

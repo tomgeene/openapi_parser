@@ -4,6 +4,7 @@ defmodule OpenapiParser.Spec.V2.Swagger do
   This is the root document object for the API specification.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.{ExternalDocumentation, Info, Tag}
 
   alias OpenapiParser.Spec.V2.{
@@ -58,6 +59,8 @@ defmodule OpenapiParser.Spec.V2.Swagger do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
+
     with {:ok, info} <- parse_info(data),
          {:ok, paths} <- parse_paths(data),
          {:ok, definitions} <- parse_definitions(data),
@@ -68,13 +71,13 @@ defmodule OpenapiParser.Spec.V2.Swagger do
          {:ok, tags} <- parse_tags(data),
          {:ok, external_docs} <- parse_external_docs(data) do
       swagger = %__MODULE__{
-        swagger: Map.get(data, "swagger"),
+        swagger: Map.get(data, :swagger),
         info: info,
-        host: Map.get(data, "host"),
-        base_path: Map.get(data, "basePath"),
-        schemes: Map.get(data, "schemes"),
-        consumes: Map.get(data, "consumes"),
-        produces: Map.get(data, "produces"),
+        host: Map.get(data, :host),
+        base_path: Map.get(data, :basePath),
+        schemes: Map.get(data, :schemes),
+        consumes: Map.get(data, :consumes),
+        produces: Map.get(data, :produces),
         paths: paths,
         definitions: definitions,
         parameters: parameters,
@@ -89,23 +92,26 @@ defmodule OpenapiParser.Spec.V2.Swagger do
     end
   end
 
-  defp parse_info(%{"info" => info_data}) when is_map(info_data) do
+  defp parse_info(%{:info => info_data}) when is_map(info_data) do
+    # Normalize info_data so we can check for :license
+    normalized_info = KeyNormalizer.normalize_shallow(info_data)
+
     with {:ok, info} <- Info.new(info_data),
-         {:ok, license} <- parse_license(info_data) do
+         {:ok, license} <- parse_license(normalized_info) do
       {:ok, %{info | license: license}}
     end
   end
 
   defp parse_info(_), do: {:error, "info is required"}
 
-  defp parse_license(%{"license" => license_data}) when is_map(license_data) do
+  defp parse_license(%{:license => license_data}) when is_map(license_data) do
     alias OpenapiParser.Spec.V2.License
     License.new(license_data)
   end
 
   defp parse_license(_), do: {:ok, nil}
 
-  defp parse_paths(%{"paths" => paths}) when is_map(paths) do
+  defp parse_paths(%{:paths => paths}) when is_map(paths) do
     result =
       Enum.reduce_while(paths, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
         case PathItem.new(value) do
@@ -119,7 +125,7 @@ defmodule OpenapiParser.Spec.V2.Swagger do
 
   defp parse_paths(_), do: {:error, "paths is required"}
 
-  defp parse_definitions(%{"definitions" => definitions}) when is_map(definitions) do
+  defp parse_definitions(%{:definitions => definitions}) when is_map(definitions) do
     result =
       Enum.reduce_while(definitions, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
         case Schema.new(value) do
@@ -133,7 +139,7 @@ defmodule OpenapiParser.Spec.V2.Swagger do
 
   defp parse_definitions(_), do: {:ok, nil}
 
-  defp parse_parameters(%{"parameters" => parameters}) when is_map(parameters) do
+  defp parse_parameters(%{:parameters => parameters}) when is_map(parameters) do
     result =
       Enum.reduce_while(parameters, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
         case Parameter.new(value) do
@@ -147,7 +153,7 @@ defmodule OpenapiParser.Spec.V2.Swagger do
 
   defp parse_parameters(_), do: {:ok, nil}
 
-  defp parse_responses(%{"responses" => responses}) when is_map(responses) do
+  defp parse_responses(%{:responses => responses}) when is_map(responses) do
     result =
       Enum.reduce_while(responses, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
         case Response.new(value) do
@@ -161,7 +167,7 @@ defmodule OpenapiParser.Spec.V2.Swagger do
 
   defp parse_responses(_), do: {:ok, nil}
 
-  defp parse_security_definitions(%{"securityDefinitions" => sec_defs}) when is_map(sec_defs) do
+  defp parse_security_definitions(%{:securityDefinitions => sec_defs}) when is_map(sec_defs) do
     result =
       Enum.reduce_while(sec_defs, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
         case SecurityScheme.new(value) do
@@ -175,7 +181,7 @@ defmodule OpenapiParser.Spec.V2.Swagger do
 
   defp parse_security_definitions(_), do: {:ok, nil}
 
-  defp parse_security(%{"security" => security}) when is_list(security) do
+  defp parse_security(%{:security => security}) when is_list(security) do
     result =
       Enum.reduce_while(security, {:ok, []}, fn sec_data, {:ok, acc} ->
         case SecurityRequirement.new(sec_data) do
@@ -189,7 +195,7 @@ defmodule OpenapiParser.Spec.V2.Swagger do
 
   defp parse_security(_), do: {:ok, nil}
 
-  defp parse_tags(%{"tags" => tags}) when is_list(tags) do
+  defp parse_tags(%{:tags => tags}) when is_list(tags) do
     result =
       Enum.reduce_while(tags, {:ok, []}, fn tag_data, {:ok, acc} ->
         case Tag.new(tag_data) do
@@ -203,7 +209,7 @@ defmodule OpenapiParser.Spec.V2.Swagger do
 
   defp parse_tags(_), do: {:ok, nil}
 
-  defp parse_external_docs(%{"externalDocs" => docs_data}) when is_map(docs_data) do
+  defp parse_external_docs(%{:externalDocs => docs_data}) when is_map(docs_data) do
     ExternalDocumentation.new(docs_data)
   end
 

@@ -3,6 +3,7 @@ defmodule OpenapiParser.Spec.V2.Header do
   Header Object for Swagger 2.0.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.V2.Schema
   alias OpenapiParser.Validation
 
@@ -53,26 +54,28 @@ defmodule OpenapiParser.Spec.V2.Header do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
+
     with {:ok, items} <- parse_items(data) do
       header = %__MODULE__{
-        description: Map.get(data, "description"),
-        type: parse_type(data["type"]),
-        format: Map.get(data, "format"),
+        description: Map.get(data, :description),
+        type: parse_type(data[:type]),
+        format: Map.get(data, :format),
         items: items,
-        collection_format: Map.get(data, "collectionFormat"),
-        default: Map.get(data, "default"),
-        maximum: Map.get(data, "maximum"),
-        exclusive_maximum: Map.get(data, "exclusiveMaximum"),
-        minimum: Map.get(data, "minimum"),
-        exclusive_minimum: Map.get(data, "exclusiveMinimum"),
-        max_length: Map.get(data, "maxLength"),
-        min_length: Map.get(data, "minLength"),
-        pattern: Map.get(data, "pattern"),
-        max_items: Map.get(data, "maxItems"),
-        min_items: Map.get(data, "minItems"),
-        unique_items: Map.get(data, "uniqueItems"),
-        enum: Map.get(data, "enum"),
-        multiple_of: Map.get(data, "multipleOf")
+        collection_format: Map.get(data, :collectionFormat),
+        default: Map.get(data, :default),
+        maximum: Map.get(data, :maximum),
+        exclusive_maximum: Map.get(data, :exclusiveMaximum),
+        minimum: Map.get(data, :minimum),
+        exclusive_minimum: Map.get(data, :exclusiveMinimum),
+        max_length: Map.get(data, :maxLength),
+        min_length: Map.get(data, :minLength),
+        pattern: Map.get(data, :pattern),
+        max_items: Map.get(data, :maxItems),
+        min_items: Map.get(data, :minItems),
+        unique_items: Map.get(data, :uniqueItems),
+        enum: Map.get(data, :enum),
+        multiple_of: Map.get(data, :multipleOf)
       }
 
       {:ok, header}
@@ -87,7 +90,7 @@ defmodule OpenapiParser.Spec.V2.Header do
   defp parse_type("array"), do: :array
   defp parse_type(_), do: nil
 
-  defp parse_items(%{"items" => items_data}) when is_map(items_data) do
+  defp parse_items(%{:items => items_data}) when is_map(items_data) do
     Schema.new(items_data)
   end
 

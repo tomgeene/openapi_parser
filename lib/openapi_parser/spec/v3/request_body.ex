@@ -5,6 +5,7 @@ defmodule OpenapiParser.Spec.V3.RequestBody do
   Describes a single request body.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.V3.MediaType
   alias OpenapiParser.Validation
 
@@ -21,18 +22,20 @@ defmodule OpenapiParser.Spec.V3.RequestBody do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
+
     with {:ok, content} <- parse_content(data) do
       request_body = %__MODULE__{
-        description: Map.get(data, "description"),
+        description: Map.get(data, :description),
         content: content,
-        required: Map.get(data, "required", false)
+        required: Map.get(data, :required, false)
       }
 
       {:ok, request_body}
     end
   end
 
-  defp parse_content(%{"content" => content}) when is_map(content) do
+  defp parse_content(%{:content => content}) when is_map(content) do
     result =
       Enum.reduce_while(content, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
         case MediaType.new(value) do

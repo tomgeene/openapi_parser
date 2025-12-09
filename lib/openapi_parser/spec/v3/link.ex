@@ -5,6 +5,7 @@ defmodule OpenapiParser.Spec.V3.Link do
   Represents a possible design-time link for a response.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.V3.Server
   alias OpenapiParser.Validation
 
@@ -24,13 +25,15 @@ defmodule OpenapiParser.Spec.V3.Link do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
+
     with {:ok, server} <- parse_server(data) do
       link = %__MODULE__{
-        operation_ref: Map.get(data, "operationRef"),
-        operation_id: Map.get(data, "operationId"),
-        parameters: Map.get(data, "parameters"),
-        request_body: Map.get(data, "requestBody"),
-        description: Map.get(data, "description"),
+        operation_ref: Map.get(data, :operationRef),
+        operation_id: Map.get(data, :operationId),
+        parameters: Map.get(data, :parameters),
+        request_body: Map.get(data, :requestBody),
+        description: Map.get(data, :description),
         server: server
       }
 
@@ -38,7 +41,7 @@ defmodule OpenapiParser.Spec.V3.Link do
     end
   end
 
-  defp parse_server(%{"server" => server_data}) when is_map(server_data) do
+  defp parse_server(%{:server => server_data}) when is_map(server_data) do
     Server.new(server_data)
   end
 

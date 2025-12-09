@@ -3,6 +3,7 @@ defmodule OpenapiParser.Spec.V2.Parameter do
   Parameter Object for Swagger 2.0.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.V2.Schema
   alias OpenapiParser.Validation
 
@@ -70,36 +71,37 @@ defmodule OpenapiParser.Spec.V2.Parameter do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
     # Handle $ref
-    if Map.has_key?(data, "$ref") do
-      {:ok, %__MODULE__{ref: data["$ref"]}}
+    if Map.has_key?(data, :"$ref") do
+      {:ok, %__MODULE__{ref: data[:"$ref"]}}
     else
       with {:ok, schema} <- parse_schema(data),
            {:ok, items} <- parse_items(data) do
         parameter = %__MODULE__{
-          name: Map.get(data, "name"),
-          location: parse_location(data["in"]),
-          description: Map.get(data, "description"),
-          required: Map.get(data, "required", false),
+          name: Map.get(data, :name),
+          location: parse_location(data[:in]),
+          description: Map.get(data, :description),
+          required: Map.get(data, :required, false),
           schema: schema,
-          type: parse_type(data["type"]),
-          format: Map.get(data, "format"),
-          allow_empty_value: Map.get(data, "allowEmptyValue"),
+          type: parse_type(data[:type]),
+          format: Map.get(data, :format),
+          allow_empty_value: Map.get(data, :allowEmptyValue),
           items: items,
-          collection_format: Map.get(data, "collectionFormat"),
-          default: Map.get(data, "default"),
-          maximum: Map.get(data, "maximum"),
-          exclusive_maximum: Map.get(data, "exclusiveMaximum"),
-          minimum: Map.get(data, "minimum"),
-          exclusive_minimum: Map.get(data, "exclusiveMinimum"),
-          max_length: Map.get(data, "maxLength"),
-          min_length: Map.get(data, "minLength"),
-          pattern: Map.get(data, "pattern"),
-          max_items: Map.get(data, "maxItems"),
-          min_items: Map.get(data, "minItems"),
-          unique_items: Map.get(data, "uniqueItems"),
-          enum: Map.get(data, "enum"),
-          multiple_of: Map.get(data, "multipleOf"),
+          collection_format: Map.get(data, :collectionFormat),
+          default: Map.get(data, :default),
+          maximum: Map.get(data, :maximum),
+          exclusive_maximum: Map.get(data, :exclusiveMaximum),
+          minimum: Map.get(data, :minimum),
+          exclusive_minimum: Map.get(data, :exclusiveMinimum),
+          max_length: Map.get(data, :maxLength),
+          min_length: Map.get(data, :minLength),
+          pattern: Map.get(data, :pattern),
+          max_items: Map.get(data, :maxItems),
+          min_items: Map.get(data, :minItems),
+          unique_items: Map.get(data, :uniqueItems),
+          enum: Map.get(data, :enum),
+          multiple_of: Map.get(data, :multipleOf),
           ref: nil
         }
 
@@ -124,13 +126,13 @@ defmodule OpenapiParser.Spec.V2.Parameter do
   defp parse_type("file"), do: :file
   defp parse_type(_), do: nil
 
-  defp parse_schema(%{"schema" => schema_data}) when is_map(schema_data) do
+  defp parse_schema(%{:schema => schema_data}) when is_map(schema_data) do
     Schema.new(schema_data)
   end
 
   defp parse_schema(_), do: {:ok, nil}
 
-  defp parse_items(%{"items" => items_data}) when is_map(items_data) do
+  defp parse_items(%{:items => items_data}) when is_map(items_data) do
     Schema.new(items_data)
   end
 

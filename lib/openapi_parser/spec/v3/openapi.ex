@@ -5,6 +5,7 @@ defmodule OpenapiParser.Spec.V3.OpenAPI do
   This is the root document object for the API specification.
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Spec.{ExternalDocumentation, Info, Tag, V3}
   alias OpenapiParser.Validation
 
@@ -37,6 +38,8 @@ defmodule OpenapiParser.Spec.V3.OpenAPI do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
+
     with {:ok, info} <- parse_info(data),
          {:ok, servers} <- parse_servers(data),
          {:ok, paths} <- parse_paths(data),
@@ -46,7 +49,7 @@ defmodule OpenapiParser.Spec.V3.OpenAPI do
          {:ok, tags} <- parse_tags(data),
          {:ok, external_docs} <- parse_external_docs(data) do
       openapi = %__MODULE__{
-        openapi: Map.get(data, "openapi"),
+        openapi: Map.get(data, :openapi),
         info: info,
         servers: servers,
         paths: paths,
@@ -61,22 +64,25 @@ defmodule OpenapiParser.Spec.V3.OpenAPI do
     end
   end
 
-  defp parse_info(%{"info" => info_data}) when is_map(info_data) do
+  defp parse_info(%{:info => info_data}) when is_map(info_data) do
+    # Normalize info_data so we can check for :license
+    normalized_info = KeyNormalizer.normalize_shallow(info_data)
+
     with {:ok, info} <- Info.new(info_data),
-         {:ok, license} <- parse_license(info_data) do
+         {:ok, license} <- parse_license(normalized_info) do
       {:ok, %{info | license: license}}
     end
   end
 
   defp parse_info(_), do: {:error, "info is required"}
 
-  defp parse_license(%{"license" => license_data}) when is_map(license_data) do
+  defp parse_license(%{:license => license_data}) when is_map(license_data) do
     V3.License.new(license_data)
   end
 
   defp parse_license(_), do: {:ok, nil}
 
-  defp parse_servers(%{"servers" => servers}) when is_list(servers) do
+  defp parse_servers(%{:servers => servers}) when is_list(servers) do
     result =
       Enum.reduce_while(servers, {:ok, []}, fn server_data, {:ok, acc} ->
         case V3.Server.new(server_data) do
@@ -90,11 +96,11 @@ defmodule OpenapiParser.Spec.V3.OpenAPI do
 
   defp parse_servers(_), do: {:ok, nil}
 
-  defp parse_paths(%{"paths" => paths}) when is_map(paths) do
+  defp parse_paths(%{:paths => paths}) when is_map(paths) do
     result =
       Enum.reduce_while(paths, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
         result =
-          if Map.has_key?(value, "$ref") do
+          if Map.has_key?(value, :"$ref") do
             V3.Reference.new(value)
           else
             V3.PathItem.new(value)
@@ -111,11 +117,11 @@ defmodule OpenapiParser.Spec.V3.OpenAPI do
 
   defp parse_paths(_), do: {:ok, nil}
 
-  defp parse_webhooks(%{"webhooks" => webhooks}) when is_map(webhooks) do
+  defp parse_webhooks(%{:webhooks => webhooks}) when is_map(webhooks) do
     result =
       Enum.reduce_while(webhooks, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
         result =
-          if Map.has_key?(value, "$ref") do
+          if Map.has_key?(value, :"$ref") do
             V3.Reference.new(value)
           else
             V3.PathItem.new(value)
@@ -132,13 +138,13 @@ defmodule OpenapiParser.Spec.V3.OpenAPI do
 
   defp parse_webhooks(_), do: {:ok, nil}
 
-  defp parse_components(%{"components" => components_data}) when is_map(components_data) do
+  defp parse_components(%{:components => components_data}) when is_map(components_data) do
     V3.Components.new(components_data)
   end
 
   defp parse_components(_), do: {:ok, nil}
 
-  defp parse_security(%{"security" => security}) when is_list(security) do
+  defp parse_security(%{:security => security}) when is_list(security) do
     result =
       Enum.reduce_while(security, {:ok, []}, fn sec_data, {:ok, acc} ->
         case V3.SecurityRequirement.new(sec_data) do
@@ -152,7 +158,7 @@ defmodule OpenapiParser.Spec.V3.OpenAPI do
 
   defp parse_security(_), do: {:ok, nil}
 
-  defp parse_tags(%{"tags" => tags}) when is_list(tags) do
+  defp parse_tags(%{:tags => tags}) when is_list(tags) do
     result =
       Enum.reduce_while(tags, {:ok, []}, fn tag_data, {:ok, acc} ->
         case Tag.new(tag_data) do
@@ -166,7 +172,7 @@ defmodule OpenapiParser.Spec.V3.OpenAPI do
 
   defp parse_tags(_), do: {:ok, nil}
 
-  defp parse_external_docs(%{"externalDocs" => docs_data}) when is_map(docs_data) do
+  defp parse_external_docs(%{:externalDocs => docs_data}) when is_map(docs_data) do
     ExternalDocumentation.new(docs_data)
   end
 

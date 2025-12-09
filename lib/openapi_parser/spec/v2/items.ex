@@ -3,6 +3,7 @@ defmodule OpenapiParser.Spec.V2.Items do
   A limited subset of JSON-Schema's items object for array parameters (Swagger 2.0).
   """
 
+  alias OpenapiParser.KeyNormalizer
   alias OpenapiParser.Validation
 
   @type collection_format :: :csv | :ssv | :tsv | :pipes | :multi
@@ -52,25 +53,27 @@ defmodule OpenapiParser.Spec.V2.Items do
   """
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
+    data = KeyNormalizer.normalize_shallow(data)
+
     with {:ok, items} <- parse_items(data) do
       items_struct = %__MODULE__{
-        type: parse_type(Map.get(data, "type")),
-        format: Map.get(data, "format"),
+        type: parse_type(Map.get(data, :type)),
+        format: Map.get(data, :format),
         items: items,
-        collection_format: parse_collection_format(Map.get(data, "collectionFormat")),
-        default: Map.get(data, "default"),
-        maximum: Map.get(data, "maximum"),
-        exclusive_maximum: Map.get(data, "exclusiveMaximum"),
-        minimum: Map.get(data, "minimum"),
-        exclusive_minimum: Map.get(data, "exclusiveMinimum"),
-        max_length: Map.get(data, "maxLength"),
-        min_length: Map.get(data, "minLength"),
-        pattern: Map.get(data, "pattern"),
-        max_items: Map.get(data, "maxItems"),
-        min_items: Map.get(data, "minItems"),
-        unique_items: Map.get(data, "uniqueItems"),
-        enum: Map.get(data, "enum"),
-        multiple_of: Map.get(data, "multipleOf")
+        collection_format: parse_collection_format(Map.get(data, :collectionFormat)),
+        default: Map.get(data, :default),
+        maximum: Map.get(data, :maximum),
+        exclusive_maximum: Map.get(data, :exclusiveMaximum),
+        minimum: Map.get(data, :minimum),
+        exclusive_minimum: Map.get(data, :exclusiveMinimum),
+        max_length: Map.get(data, :maxLength),
+        min_length: Map.get(data, :minLength),
+        pattern: Map.get(data, :pattern),
+        max_items: Map.get(data, :maxItems),
+        min_items: Map.get(data, :minItems),
+        unique_items: Map.get(data, :uniqueItems),
+        enum: Map.get(data, :enum),
+        multiple_of: Map.get(data, :multipleOf)
       }
 
       {:ok, items_struct}
@@ -93,7 +96,7 @@ defmodule OpenapiParser.Spec.V2.Items do
   defp parse_collection_format("multi"), do: :multi
   defp parse_collection_format(_), do: nil
 
-  defp parse_items(%{"items" => items_data}) when is_map(items_data) do
+  defp parse_items(%{:items => items_data}) when is_map(items_data) do
     new(items_data)
   end
 

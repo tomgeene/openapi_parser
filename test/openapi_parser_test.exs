@@ -27,8 +27,7 @@ defmodule OpenapiParserTest do
       }
       """
 
-      assert {:ok, %Spec.OpenAPI{version: :v3_1}} =
-               OpenapiParser.parse(spec, format: :json)
+      assert {:ok, %Spec.OpenAPI{version: :v3_1}} = OpenapiParser.parse(spec, format: :json)
     end
 
     test "parses OpenAPI 3.0 JSON" do
@@ -53,8 +52,7 @@ defmodule OpenapiParserTest do
       }
       """
 
-      assert {:ok, %Spec.OpenAPI{version: :v3_0}} =
-               OpenapiParser.parse(spec, format: :json)
+      assert {:ok, %Spec.OpenAPI{version: :v3_0}} = OpenapiParser.parse(spec, format: :json)
     end
 
     test "parses Swagger 2.0 JSON" do
@@ -79,8 +77,7 @@ defmodule OpenapiParserTest do
       }
       """
 
-      assert {:ok, %Spec.OpenAPI{version: :v2}} =
-               OpenapiParser.parse(spec, format: :json)
+      assert {:ok, %Spec.OpenAPI{version: :v2}} = OpenapiParser.parse(spec, format: :json)
     end
 
     test "parses YAML format" do
