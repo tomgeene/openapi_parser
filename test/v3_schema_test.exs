@@ -165,6 +165,50 @@ defmodule OpenapiParser.V3SchemaTest do
       assert {:ok, schema} = Schema.new(data)
       assert schema.nullable == true
     end
+
+    test "preserves type: null as :null atom (OpenAPI 3.1)" do
+      data = %{
+        "type" => "null"
+      }
+
+      assert {:ok, schema} = Schema.new(data)
+      assert schema.type == :null
+    end
+
+    test "preserves type: null in array of types (OpenAPI 3.1)" do
+      data = %{
+        "type" => ["string", "null"]
+      }
+
+      assert {:ok, schema} = Schema.new(data)
+      assert schema.type == [:string, :null]
+    end
+
+    test "preserves type: null in oneOf composition" do
+      data = %{
+        "oneOf" => [
+          %{"type" => "string"},
+          %{"type" => "null"}
+        ]
+      }
+
+      assert {:ok, schema} = Schema.new(data)
+      assert length(schema.one_of) == 2
+      [string_schema, null_schema] = schema.one_of
+      assert string_schema.type == :string
+      assert null_schema.type == :null
+    end
+
+    test "distinguishes null type from missing type" do
+      null_type_data = %{"type" => "null"}
+      empty_data = %{"description" => "Just a description"}
+
+      assert {:ok, null_schema} = Schema.new(null_type_data)
+      assert {:ok, empty_schema} = Schema.new(empty_data)
+
+      assert null_schema.type == :null
+      assert empty_schema.type == nil
+    end
   end
 
   describe "validation" do
