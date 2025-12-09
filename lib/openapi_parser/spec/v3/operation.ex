@@ -45,6 +45,7 @@ defmodule OpenapiParser.Spec.V3.Operation do
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
     data = KeyNormalizer.normalize_shallow(data)
+
     with {:ok, external_docs} <- parse_external_docs(data),
          {:ok, parameters} <- parse_parameters(data),
          {:ok, request_body} <- parse_request_body(data),
@@ -80,11 +81,14 @@ defmodule OpenapiParser.Spec.V3.Operation do
   defp parse_parameters(%{:parameters => params}) when is_list(params) do
     result =
       Enum.reduce_while(params, {:ok, []}, fn param_data, {:ok, acc} ->
+        # Normalize the param_data before checking for $ref
+        normalized_param = KeyNormalizer.normalize_shallow(param_data)
+
         result =
-          if Map.has_key?(param_data, :"$ref") do
-            V3.Reference.new(param_data)
+          if Map.has_key?(normalized_param, :"$ref") do
+            V3.Reference.new(normalized_param)
           else
-            V3.Parameter.new(param_data)
+            V3.Parameter.new(normalized_param)
           end
 
         case result do
@@ -99,10 +103,13 @@ defmodule OpenapiParser.Spec.V3.Operation do
   defp parse_parameters(_), do: {:ok, nil}
 
   defp parse_request_body(%{:requestBody => body_data}) when is_map(body_data) do
-    if Map.has_key?(body_data, :"$ref") do
-      V3.Reference.new(body_data)
+    # Normalize the body_data before checking for $ref
+    normalized_body = KeyNormalizer.normalize_shallow(body_data)
+
+    if Map.has_key?(normalized_body, :"$ref") do
+      V3.Reference.new(normalized_body)
     else
-      V3.RequestBody.new(body_data)
+      V3.RequestBody.new(normalized_body)
     end
   end
 
@@ -117,11 +124,14 @@ defmodule OpenapiParser.Spec.V3.Operation do
   defp parse_callbacks(%{:callbacks => callbacks}) when is_map(callbacks) do
     result =
       Enum.reduce_while(callbacks, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
+        # Normalize the value before checking for $ref
+        normalized_value = KeyNormalizer.normalize_shallow(value)
+
         result =
-          if Map.has_key?(value, :"$ref") do
-            V3.Reference.new(value)
+          if Map.has_key?(normalized_value, :"$ref") do
+            V3.Reference.new(normalized_value)
           else
-            V3.Callback.new(value)
+            V3.Callback.new(normalized_value)
           end
 
         case result do

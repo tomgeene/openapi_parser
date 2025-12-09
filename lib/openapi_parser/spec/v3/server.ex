@@ -23,6 +23,7 @@ defmodule OpenapiParser.Spec.V3.Server do
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
     data = KeyNormalizer.normalize_shallow(data)
+
     with {:ok, variables} <- parse_variables(data) do
       server = %__MODULE__{
         url: Map.get(data, :url),

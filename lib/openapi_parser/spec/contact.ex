@@ -22,6 +22,7 @@ defmodule OpenapiParser.Spec.Contact do
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
     data = KeyNormalizer.normalize_shallow(data)
+
     contact = %__MODULE__{
       name: Map.get(data, :name),
       url: Map.get(data, :url),

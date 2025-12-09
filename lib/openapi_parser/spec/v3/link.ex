@@ -26,6 +26,7 @@ defmodule OpenapiParser.Spec.V3.Link do
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
     data = KeyNormalizer.normalize_shallow(data)
+
     with {:ok, server} <- parse_server(data) do
       link = %__MODULE__{
         operation_ref: Map.get(data, :operationRef),

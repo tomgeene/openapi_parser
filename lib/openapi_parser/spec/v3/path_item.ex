@@ -45,6 +45,7 @@ defmodule OpenapiParser.Spec.V3.PathItem do
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
     data = KeyNormalizer.normalize_shallow(data)
+
     with {:ok, get} <- parse_operation(data, :get),
          {:ok, put} <- parse_operation(data, :put),
          {:ok, post} <- parse_operation(data, :post),

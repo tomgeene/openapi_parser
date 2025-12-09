@@ -39,6 +39,7 @@ defmodule OpenapiParser.Spec.V3.Components do
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
     data = KeyNormalizer.normalize_shallow(data)
+
     with {:ok, schemas} <- parse_component(data, :schemas, &V3.Schema.new/1),
          {:ok, responses} <- parse_component(data, :responses, &V3.Response.new/1),
          {:ok, parameters} <- parse_component(data, :parameters, &V3.Parameter.new/1),

@@ -24,6 +24,7 @@ defmodule OpenapiParser.Spec.V3.Response do
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
     data = KeyNormalizer.normalize_shallow(data)
+
     with {:ok, headers} <- parse_headers(data),
          {:ok, content} <- parse_content(data),
          {:ok, links} <- parse_links(data) do

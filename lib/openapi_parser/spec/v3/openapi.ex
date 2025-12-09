@@ -39,6 +39,7 @@ defmodule OpenapiParser.Spec.V3.OpenAPI do
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
     data = KeyNormalizer.normalize_shallow(data)
+
     with {:ok, info} <- parse_info(data),
          {:ok, servers} <- parse_servers(data),
          {:ok, paths} <- parse_paths(data),
@@ -64,8 +65,11 @@ defmodule OpenapiParser.Spec.V3.OpenAPI do
   end
 
   defp parse_info(%{:info => info_data}) when is_map(info_data) do
+    # Normalize info_data so we can check for :license
+    normalized_info = KeyNormalizer.normalize_shallow(info_data)
+
     with {:ok, info} <- Info.new(info_data),
-         {:ok, license} <- parse_license(info_data) do
+         {:ok, license} <- parse_license(normalized_info) do
       {:ok, %{info | license: license}}
     end
   end

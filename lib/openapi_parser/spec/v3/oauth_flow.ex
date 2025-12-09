@@ -23,6 +23,7 @@ defmodule OpenapiParser.Spec.V3.OAuthFlow do
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
     data = KeyNormalizer.normalize_shallow(data)
+
     flow = %__MODULE__{
       authorization_url: Map.get(data, :authorizationUrl),
       token_url: Map.get(data, :tokenUrl),

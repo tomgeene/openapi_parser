@@ -22,6 +22,7 @@ defmodule OpenapiParser.Spec.V3.Reference do
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
     data = KeyNormalizer.normalize_shallow(data)
+
     reference = %__MODULE__{
       ref: Map.get(data, :"$ref"),
       summary: Map.get(data, :summary),

@@ -22,6 +22,7 @@ defmodule OpenapiParser.Spec.V3.Xml do
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
     data = KeyNormalizer.normalize_shallow(data)
+
     xml = %__MODULE__{
       name: Map.get(data, :name),
       namespace: Map.get(data, :namespace),

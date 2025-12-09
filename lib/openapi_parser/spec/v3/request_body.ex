@@ -23,6 +23,7 @@ defmodule OpenapiParser.Spec.V3.RequestBody do
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
     data = KeyNormalizer.normalize_shallow(data)
+
     with {:ok, content} <- parse_content(data) do
       request_body = %__MODULE__{
         description: Map.get(data, :description),

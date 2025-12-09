@@ -30,6 +30,7 @@ defmodule OpenapiParser.Spec.Info do
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
     data = KeyNormalizer.normalize_shallow(data)
+
     with {:ok, contact} <- parse_contact(data) do
       info = %__MODULE__{
         title: Map.get(data, :title),

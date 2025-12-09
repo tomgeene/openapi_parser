@@ -55,6 +55,7 @@ defmodule OpenapiParser.Spec.V2.Header do
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
     data = KeyNormalizer.normalize_shallow(data)
+
     with {:ok, items} <- parse_items(data) do
       header = %__MODULE__{
         description: Map.get(data, :description),

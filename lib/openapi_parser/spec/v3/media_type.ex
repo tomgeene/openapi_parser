@@ -24,6 +24,7 @@ defmodule OpenapiParser.Spec.V3.MediaType do
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
     data = KeyNormalizer.normalize_shallow(data)
+
     with {:ok, schema} <- parse_schema(data),
          {:ok, examples} <- parse_examples(data),
          {:ok, encoding} <- parse_encoding(data) do

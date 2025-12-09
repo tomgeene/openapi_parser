@@ -331,8 +331,7 @@ defmodule OpenapiParser.ValidationTest do
     end
 
     test "validates external file references with fragment" do
-      assert :ok =
-               Validation.validate_reference("./schemas/user.json#/User", "field")
+      assert :ok = Validation.validate_reference("./schemas/user.json#/User", "field")
 
       assert :ok = Validation.validate_reference("../common.yaml#/definitions/Error", "field")
     end
@@ -375,8 +374,7 @@ defmodule OpenapiParser.ValidationTest do
     end
 
     test "validates vendor-specific types" do
-      assert :ok =
-               Validation.validate_content_type("application/vnd.api+json", "field")
+      assert :ok = Validation.validate_content_type("application/vnd.api+json", "field")
 
       assert :ok =
                Validation.validate_content_type(

@@ -22,6 +22,7 @@ defmodule OpenapiParser.Spec.V3.Discriminator do
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
     data = KeyNormalizer.normalize_shallow(data)
+
     discriminator = %__MODULE__{
       property_name: Map.get(data, :propertyName),
       mapping: Map.get(data, :mapping)

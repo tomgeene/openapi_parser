@@ -50,6 +50,7 @@ defmodule OpenapiParser.Spec.V3.Parameter do
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
     data = KeyNormalizer.normalize_shallow(data)
+
     with {:ok, schema} <- parse_schema(data),
          {:ok, examples} <- parse_examples(data),
          {:ok, content} <- parse_content(data) do
@@ -88,11 +89,14 @@ defmodule OpenapiParser.Spec.V3.Parameter do
   defp parse_examples(%{:examples => examples}) when is_map(examples) do
     result =
       Enum.reduce_while(examples, {:ok, %{}}, fn {key, value}, {:ok, acc} ->
+        # Normalize the value before checking for $ref
+        normalized_value = KeyNormalizer.normalize_shallow(value)
+
         result =
-          if Map.has_key?(value, :"$ref") do
-            Reference.new(value)
+          if Map.has_key?(normalized_value, :"$ref") do
+            Reference.new(normalized_value)
           else
-            Example.new(value)
+            Example.new(normalized_value)
           end
 
         case result do

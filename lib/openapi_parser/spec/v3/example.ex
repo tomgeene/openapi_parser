@@ -21,6 +21,7 @@ defmodule OpenapiParser.Spec.V3.Example do
   @spec new(map()) :: {:ok, t()} | {:error, String.t()}
   def new(data) when is_map(data) do
     data = KeyNormalizer.normalize_shallow(data)
+
     example = %__MODULE__{
       summary: Map.get(data, :summary),
       description: Map.get(data, :description),
