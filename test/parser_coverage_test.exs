@@ -176,4 +176,88 @@ defmodule OpenapiParser.ParserCoverageTest do
     assert {:ok, spec} = V3.parse(data, :v3_1)
     assert spec.version == :v3_1
   end
+
+  test "handles JSON decode error with explicit format" do
+    invalid_json = "{invalid json}"
+
+    assert {:error, msg} = Parser.parse(invalid_json, format: :json)
+    assert String.contains?(msg, "JSON decode error")
+  end
+
+  test "handles YAML decode error" do
+    invalid_yaml = "invalid: yaml: [unclosed"
+
+    assert {:error, msg} = Parser.parse(invalid_yaml, format: :yaml)
+    assert String.contains?(msg, "YAML decode error")
+  end
+
+  test "handles file read error" do
+    assert {:error, msg} = Parser.parse_file("nonexistent_file.json")
+    assert String.contains?(msg, "Failed to read file")
+  end
+
+  test "detects format from file extension" do
+    # Test .yaml extension
+    assert {:ok, _} = Parser.parse_file("test/fixtures/openapi_3.1_comprehensive.yaml")
+    # Test .json extension
+    assert {:ok, _} = Parser.parse_file("test/fixtures/openapi_3.1.json")
+  end
+
+  test "handles unsupported Swagger version" do
+    spec = """
+    {
+      "swagger": "1.0",
+      "info": {"title": "Test", "version": "1.0.0"},
+      "paths": {}
+    }
+    """
+
+    assert {:error, msg} = Parser.parse(spec, format: :json)
+    assert String.contains?(msg, "Unsupported Swagger version")
+  end
+
+  test "handles validation errors" do
+    spec = """
+    {
+      "openapi": "3.1.0",
+      "info": {"title": "Test", "version": "1.0.0"}
+    }
+    """
+
+    assert {:error, msg} = Parser.parse(spec, format: :json, validate: true)
+
+    assert String.contains?(msg, "paths") || String.contains?(msg, "components") ||
+             String.contains?(msg, "webhooks")
+  end
+
+  test "parses with resolve_refs option" do
+    spec = """
+    {
+      "openapi": "3.1.0",
+      "info": {"title": "Test", "version": "1.0.0"},
+      "paths": {
+        "/test": {
+          "get": {
+            "responses": {"200": {"description": "OK"}}
+          }
+        }
+      }
+    }
+    """
+
+    assert {:ok, _parsed} = Parser.parse(spec, format: :json, resolve_refs: true)
+  end
+
+  test "auto-detects YAML when JSON fails" do
+    yaml_spec = """
+    openapi: 3.1.0
+    info:
+      title: Test
+      version: 1.0.0
+    paths: {}
+    """
+
+    assert {:ok, parsed} = Parser.parse(yaml_spec, format: :auto)
+    assert parsed.version == :v3_1
+  end
 end

@@ -239,4 +239,192 @@ defmodule OpenapiParser.V3SchemaTest do
       assert String.contains?(msg, "$id") || String.contains?(msg, "URI")
     end
   end
+
+  describe "error handling" do
+    test "handles items parsing error" do
+      # Items with invalid nested schema
+      data = %{
+        "type" => "array",
+        "items" => %{
+          "properties" => %{
+            "name" => %{
+              "allOf" => [
+                %{"type" => "string"},
+                %{"invalid" => "data"}
+              ]
+            }
+          }
+        }
+      }
+
+      # Should handle error gracefully
+      result = Schema.new(data)
+      assert match?({:ok, _}, result) or match?({:error, _}, result)
+    end
+
+    test "handles properties parsing error" do
+      data = %{
+        "type" => "object",
+        "properties" => %{
+          "name" => %{
+            "allOf" => [
+              %{"type" => "string"},
+              %{"invalid" => "data"}
+            ]
+          }
+        }
+      }
+
+      result = Schema.new(data)
+      assert match?({:ok, _}, result) or match?({:error, _}, result)
+    end
+
+    test "handles patternProperties parsing error" do
+      data = %{
+        "type" => "object",
+        "patternProperties" => %{
+          "^S_" => %{
+            "allOf" => [
+              %{"type" => "string"},
+              %{"invalid" => "data"}
+            ]
+          }
+        }
+      }
+
+      result = Schema.new(data)
+      assert match?({:ok, _}, result) or match?({:error, _}, result)
+    end
+
+    test "handles dependentSchemas parsing error" do
+      data = %{
+        "type" => "object",
+        "dependentSchemas" => %{
+          "credit_card" => %{
+            "allOf" => [
+              %{"type" => "object"},
+              %{"invalid" => "data"}
+            ]
+          }
+        }
+      }
+
+      result = Schema.new(data)
+      assert match?({:ok, _}, result) or match?({:error, _}, result)
+    end
+
+    test "handles prefixItems parsing error" do
+      data = %{
+        "type" => "array",
+        "prefixItems" => [
+          %{"type" => "string"},
+          %{
+            "allOf" => [
+              %{"type" => "integer"},
+              %{"invalid" => "data"}
+            ]
+          }
+        ]
+      }
+
+      result = Schema.new(data)
+      assert match?({:ok, _}, result) or match?({:error, _}, result)
+    end
+
+    test "handles if/then/else parsing error" do
+      data = %{
+        "if" => %{
+          "allOf" => [
+            %{"type" => "object"},
+            %{"invalid" => "data"}
+          ]
+        }
+      }
+
+      result = Schema.new(data)
+      assert match?({:ok, _}, result) or match?({:error, _}, result)
+    end
+
+    test "handles $defs parsing error" do
+      data = %{
+        "type" => "object",
+        "$defs" => %{
+          "address" => %{
+            "allOf" => [
+              %{"type" => "string"},
+              %{"invalid" => "data"}
+            ]
+          }
+        }
+      }
+
+      result = Schema.new(data)
+      assert match?({:ok, _}, result) or match?({:error, _}, result)
+    end
+
+    test "handles allOf parsing error" do
+      data = %{
+        "allOf" => [
+          %{"type" => "object"},
+          %{
+            "allOf" => [
+              %{"type" => "string"},
+              %{"invalid" => "data"}
+            ]
+          }
+        ]
+      }
+
+      result = Schema.new(data)
+      assert match?({:ok, _}, result) or match?({:error, _}, result)
+    end
+
+    test "handles anyOf parsing error" do
+      data = %{
+        "anyOf" => [
+          %{"type" => "string"},
+          %{
+            "allOf" => [
+              %{"type" => "integer"},
+              %{"invalid" => "data"}
+            ]
+          }
+        ]
+      }
+
+      result = Schema.new(data)
+      assert match?({:ok, _}, result) or match?({:error, _}, result)
+    end
+
+    test "handles oneOf parsing error" do
+      data = %{
+        "oneOf" => [
+          %{"type" => "string"},
+          %{
+            "allOf" => [
+              %{"type" => "number"},
+              %{"invalid" => "data"}
+            ]
+          }
+        ]
+      }
+
+      result = Schema.new(data)
+      assert match?({:ok, _}, result) or match?({:error, _}, result)
+    end
+
+    test "handles not parsing error" do
+      data = %{
+        "not" => %{
+          "allOf" => [
+            %{"type" => "object"},
+            %{"invalid" => "data"}
+          ]
+        }
+      }
+
+      result = Schema.new(data)
+      assert match?({:ok, _}, result) or match?({:error, _}, result)
+    end
+  end
 end

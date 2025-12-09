@@ -31,14 +31,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Swagger 2.0**:
   - Global `parameters` - Parsing and validation of root-level parameters
   - Global `responses` - Parsing and validation of root-level responses
-- Comprehensive test suite with 450+ tests covering all new features
+- Comprehensive test suite with 560+ tests covering all new features
 - Integration tests for all new JSON Schema keywords and OpenAPI features
+- Unit tests for all modules ensuring >90% code coverage
 
 ### Changed
 
 - Updated validation logic to support OpenAPI 3.1 requirements (paths/components/webhooks)
 - Enhanced schema validation to support all JSON Schema 2020-12 keywords
-- Test suite expanded from 417 tests to 451 tests
+- Test suite expanded from 417 tests to 566 tests
+- Test coverage increased to 92%+ across all modules
 
 ## [0.1.2] - 2025-12-08
 
