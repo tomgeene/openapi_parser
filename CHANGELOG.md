@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **OpenAPI 3.1 Null Type Preservation** - Fixed parsing of `type: "null"` in OpenAPI 3.1 specs
+  - Previously, `type: "null"` was converted to `nil`, making it indistinguishable from missing type
+  - Now preserves null type as `:null` atom in the Schema struct
+  - Critical for OpenAPI 3.1 nullable patterns using `oneOf` with null type
+  - Includes comprehensive test coverage for null type in various scenarios
+
 ## [0.2.0] - 2025-12-08
 
 ### Added

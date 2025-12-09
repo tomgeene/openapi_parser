@@ -9,7 +9,7 @@ defmodule OpenapiParser.Spec.V3.Schema do
   alias OpenapiParser.Spec.{ExternalDocumentation, V3}
   alias OpenapiParser.Validation
 
-  @type schema_type :: :string | :number | :integer | :boolean | :array | :object | nil
+  @type schema_type :: :string | :number | :integer | :boolean | :array | :object | :null | nil
 
   # Using any() for complex recursive types to avoid dialyzer issues
   @type t :: %__MODULE__{
@@ -258,7 +258,7 @@ defmodule OpenapiParser.Spec.V3.Schema do
   defp parse_single_type("boolean"), do: :boolean
   defp parse_single_type("array"), do: :array
   defp parse_single_type("object"), do: :object
-  defp parse_single_type("null"), do: nil
+  defp parse_single_type("null"), do: :null
   defp parse_single_type(_), do: nil
 
   defp parse_items(%{"items" => items_data}) when is_map(items_data) do
